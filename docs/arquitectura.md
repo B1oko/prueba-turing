@@ -83,7 +83,6 @@ Variables relevantes:
 
 | Variable | Valor por defecto | Uso |
 | --- | --- | --- |
-| `API_URL` | `http://localhost:8000` | URL base esperada por frontend/configuracion |
 | `SERVE_FRONTEND` | `True` | Activa el frontend estatico integrado |
 | `GEMINI_API_KEY` | requerido | Clave para Gemini/Imagen |
 | `GEMINI_MODEL` | `gemini-2.5-flash` | Modelo principal del agente |

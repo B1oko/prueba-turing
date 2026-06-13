@@ -11,7 +11,6 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    API_URL: str = "http://localhost:8000"
     SERVE_FRONTEND: bool = True
 
     # Gemini

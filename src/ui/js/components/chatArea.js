@@ -1,4 +1,4 @@
-import { subscribe, addChatMessage, addRecentCard, setSelectedCard, resetSession, getSessionState } from '../state.js';
+import { subscribe, addChatMessage, addRecentCard, setSelectedCard, resetSession, getSessionState, generateUUID } from '../state.js';
 import { sendChatMessage } from '../api.js';
 import { loadCustomCards } from './customCardsList.js';
 import { formatMarkdown } from '../utils/markdown.js';
@@ -22,7 +22,7 @@ function scrollChatToBottom() {
  */
 function appendErrorBubble(text) {
   const errorMsg = {
-    id: crypto.randomUUID(),
+    id: generateUUID(),
     role: "assistant",
     content: text
   };
@@ -284,7 +284,7 @@ export async function sendMessage(text) {
 
   // Registrar el mensaje del usuario en el historial (actualiza estado y localstorage)
   const userMsg = {
-    id: crypto.randomUUID(),
+    id: generateUUID(),
     role: "user",
     content: text
   };
@@ -310,7 +310,7 @@ export async function sendMessage(text) {
       const data = await resp.json();
 
       const assistantMsg = {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         role: "assistant",
         content: data.response,
         cards: data.cards || [],

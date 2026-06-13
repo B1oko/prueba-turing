@@ -25,44 +25,6 @@
                 "panel": "dedicated",
                 "group": "mtg-dev"
             }
-        },
-        {
-            "label": "dev: Streamlit",
-            "type": "shell",
-            "command": "uv run streamlit run ui/app.py --server.port 8501",
-            "options": {
-                "cwd": "${workspaceFolder}",
-                "env": {
-                    "API_URL": "http://127.0.0.1:8000"
-                }
-            },
-            "dependsOn": [
-                "dev: API"
-            ],
-            "isBackground": true,
-            "problemMatcher": {
-                "owner": "streamlit",
-                "pattern": {
-                    "regexp": "."
-                },
-                "background": {
-                    "activeOnStart": true,
-                    "beginsPattern": ".",
-                    "endsPattern": "You can now view your Streamlit app"
-                }
-            },
-            "presentation": {
-                "reveal": "always",
-                "panel": "dedicated",
-                "group": "mtg-dev"
-            }
-        },
-        {
-            "label": "dev: Streamlit + API",
-            "dependsOn": [
-                "dev: Streamlit"
-            ],
-            "problemMatcher": []
         }
     ]
 }

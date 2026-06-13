@@ -1,5 +1,15 @@
 // Gestor de Estado para la UI del MTG Call Center
 
+export function generateUUID() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+
 let state = {
   sessionId: "",
   chatHistory: [],
@@ -49,7 +59,7 @@ export function initSession() {
   // Obtener o crear ID de sesión
   let session = localStorage.getItem("mtg_chat_session_id");
   if (!session) {
-    session = crypto.randomUUID();
+    session = generateUUID();
     localStorage.setItem("mtg_chat_session_id", session);
   }
   state.sessionId = session;
@@ -136,7 +146,7 @@ export function setSelectedCard(card) {
  * Resetear la sesión actual y limpiar todos los datos persistentes del chat y cartas.
  */
 export function resetSession() {
-  const newSession = crypto.randomUUID();
+  const newSession = generateUUID();
   localStorage.setItem("mtg_chat_session_id", newSession);
   localStorage.removeItem("mtg_chat_history");
   localStorage.removeItem("mtg_recent_cards");

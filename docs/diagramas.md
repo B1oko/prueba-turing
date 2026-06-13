@@ -108,7 +108,6 @@ flowchart TD
 ```mermaid
 classDiagram
     class Settings {
-        +str API_URL
         +bool SERVE_FRONTEND
         +str GEMINI_API_KEY
         +str GEMINI_MODEL

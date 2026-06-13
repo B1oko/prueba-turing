@@ -15,33 +15,5 @@
             ],
             "jinja": true
         },
-        {
-            "name": "UI: Streamlit",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "streamlit",
-            "args": [
-                "run",
-                "ui/app.py",
-                "--server.port",
-                "8501"
-            ],
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal",
-            "env": {
-                "API_URL": "http://127.0.0.1:8000"
-            },
-            "jinja": true
-        }
-    ],
-    "compounds": [
-        {
-            "name": "Streamlit + API",
-            "configurations": [
-                "API: FastAPI",
-                "UI: Streamlit"
-            ],
-            "stopAll": true
-        }
     ]
 }
