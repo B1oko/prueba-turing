@@ -188,37 +188,6 @@ function appendMessageElement(msg) {
     wrapper.appendChild(cardsGrid);
   }
 
-  // Si tiene reglas citadas para la fundamentación (RAG), añadir badges
-  if (msg.role === "assistant" && msg.rules && msg.rules.length > 0) {
-    const groundingDiv = document.createElement("div");
-    groundingDiv.className = "message-rules-grounding";
-    
-    const titleSpan = document.createElement("span");
-    titleSpan.className = "grounding-title";
-    titleSpan.innerHTML = "📖 Reglas citadas:";
-    groundingDiv.appendChild(titleSpan);
-    
-    const tagsDiv = document.createElement("div");
-    tagsDiv.className = "grounding-tags";
-    
-    msg.rules.forEach(rule => {
-      const badge = document.createElement("a");
-      badge.href = `/rules.pdf#page=${rule.page}`;
-      badge.target = "_blank";
-      badge.className = "rule-badge";
-      badge.innerText = `Regla ${rule.rule_id} (Pág. ${rule.page})`;
-      
-      const tooltipText = rule.text
-        .replace(/"/g, "&quot;")
-        .substring(0, 300) + (rule.text.length > 300 ? "..." : "");
-      badge.setAttribute("title", tooltipText);
-      
-      tagsDiv.appendChild(badge);
-    });
-    
-    groundingDiv.appendChild(tagsDiv);
-    wrapper.appendChild(groundingDiv);
-  }
   
   row.appendChild(avatar);
   row.appendChild(wrapper);
