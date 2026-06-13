@@ -61,17 +61,13 @@ def _extract_rules(messages: list) -> list[RuleGrounding] | None:
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat(req: Request, chat_request: ChatRequest):
-    logger.info("Received chat request for session_id '%s' with message length %d", chat_request.session_id, len(chat_request.message))
     try:
         graph = req.app.state.graph
         config = {"configurable": {"thread_id": chat_request.session_id}}
-        
-        logger.info("Invoking agent graph for session_id '%s'...", chat_request.session_id)
         result = await graph.ainvoke(
             {"messages": [HumanMessage(content=chat_request.message)]}, config=config
         )
-        logger.info("Agent graph invocation completed successfully for session_id '%s'", chat_request.session_id)
-        
+
         raw_content = result["messages"][-1].content
         if isinstance(raw_content, list):
             assistant_msg = "".join(
@@ -79,7 +75,7 @@ async def chat(req: Request, chat_request: ChatRequest):
             )
         else:
             assistant_msg = raw_content
-            
+
         # Only look at messages from the current turn (after the last HumanMessage)
         last_human_idx = next(
             (len(result["messages"]) - 1 - i
@@ -88,17 +84,10 @@ async def chat(req: Request, chat_request: ChatRequest):
             0
         )
         current_turn_messages = result["messages"][last_human_idx:]
-        
+
         cards = _extract_cards(current_turn_messages)
         rules = _extract_rules(current_turn_messages)
-        
-        logger.info(
-            "Extracted %d cards and %d rules from current turn for session_id '%s'",
-            len(cards) if cards else 0,
-            len(rules) if rules else 0,
-            chat_request.session_id
-        )
-        
+
         return ChatResponse(response=assistant_msg, cards=cards, rules=rules)
     except Exception as e:
         logger.error("Error in /chat endpoint for session_id '%s': %s", chat_request.session_id, str(e), exc_info=True)

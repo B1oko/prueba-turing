@@ -37,15 +37,10 @@ class SearchSetsTool(BaseTool):
         name: Optional[str] = None,
         block: Optional[str] = None,
     ) -> str:
-        logger.info("SearchSetsTool invoked with name: '%s', block: '%s'", name, block)
         if not any([name, block]):
-            logger.warning("SearchSetsTool validation failed: no filters provided")
-            return json.dumps(
-                {"error": "Please provide at least one filter: name or block."}
-            )
+            return json.dumps({"error": "Please provide at least one filter: name or block."})
         try:
             sets = await self._client.search_sets(name=name, block=block)
-            logger.info("SearchSetsTool found %d matching sets.", len(sets))
         except Exception as e:
             logger.error("SearchSetsTool MTG API search failed: %s", str(e), exc_info=True)
             return json.dumps({"error": f"Error connecting to MTG API: {e}"})

@@ -37,45 +37,33 @@ async def lifespan(app: FastAPI):
         os.environ["LANGSMITH_API_KEY"] = settings.LANGSMITH_API_KEY
         os.environ["LANGSMITH_PROJECT"] = settings.LANGSMITH_PROJECT
         os.environ["LANGSMITH_ENDPOINT"] = settings.LANGSMITH_ENDPOINT
-        logger.info(
-            "LangSmith tracing enabled for project '%s'", settings.LANGSMITH_PROJECT
-        )
+        logger.info("LangSmith tracing enabled for project '%s'", settings.LANGSMITH_PROJECT)
     else:
-        logger.info("LangSmith tracing disabled")
+        logger.warning("LangSmith tracing disabled")
 
-    logger.info("Initializing vectorstore...")
     vectorstore = Chroma(
         collection_name=settings.CHROMA_COLLECTION_NAME,
         persist_directory=settings.CHROMA_DB_PATH,
     )
-
-    logger.info("Initializing MTG client...")
     mtg_client = MTGClient()
-
-    logger.info("Initializing imagen generation client...")
     imagen_client = ImagenGenerationClient(api_key=settings.GEMINI_API_KEY)
-
-    logger.info("Initializing main LLM...")
     main_llm = ChatGoogleGenerativeAI(
         model=settings.GEMINI_MODEL,
         temperature=settings.GEMINI_TEMPERATURE,
         google_api_key=settings.GEMINI_API_KEY,
     )
 
-    logger.info("Initializing card repository...")
     card_repository = LocalCustomCardRepository()
     app.state.card_repository = card_repository
 
-    logger.info("Initializing tools...")
     tools = [
         SearchRulesTool(vectorstore=vectorstore),
         SearchCardsTool(client=mtg_client),
         SearchSetsTool(client=mtg_client),
         CreateCustomCardTool(llm=main_llm, image_client=imagen_client, repository=card_repository),
     ]
-    logger.info("Initializing agent graph...")
     app.state.graph = get_agent_graph(llm=main_llm, tools=tools)
-    logger.info("Agent graph ready")
+    logger.info("Application ready")
     yield
 
 

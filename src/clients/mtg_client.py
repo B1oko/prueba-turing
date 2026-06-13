@@ -56,7 +56,6 @@ class ISetSearch(Protocol):
 
 class MTGClient(ICardSearch, ISetSearch):
     def __init__(self, timeout: int = 10):
-        logger.info("Initializing MTGClient with timeout %d", timeout)
         self._client = httpx.AsyncClient(timeout=timeout)
 
     async def search_cards(
@@ -86,14 +85,10 @@ class MTGClient(ICardSearch, ISetSearch):
         if text:
             params["text"] = text
         url = f"{_BASE_URL}/cards?{urllib.parse.urlencode(params)}"
-        
-        logger.info("MTGClient search_cards request URL: %s with params: %s", url, params)
         try:
             response = await self._client.get(url)
             response.raise_for_status()
-            raw_cards = response.json().get("cards", [])
-            logger.info("MTGClient search_cards response status: %d, found %d cards", response.status_code, len(raw_cards))
-            return [MTGCard.model_validate(c) for c in raw_cards]
+            return [MTGCard.model_validate(c) for c in response.json().get("cards", [])]
         except Exception as e:
             logger.error("MTGClient search_cards failed: %s", str(e), exc_info=True)
             raise
@@ -111,14 +106,10 @@ class MTGClient(ICardSearch, ISetSearch):
         url = f"{_BASE_URL}/sets"
         if params:
             url = f"{url}?{urllib.parse.urlencode(params)}"
-            
-        logger.info("MTGClient search_sets request URL: %s with params: %s", url, params)
         try:
             response = await self._client.get(url)
             response.raise_for_status()
-            sets = response.json().get("sets", [])
-            logger.info("MTGClient search_sets response status: %d, found %d sets", response.status_code, len(sets))
-            return sets
+            return response.json().get("sets", [])
         except Exception as e:
             logger.error("MTGClient search_sets failed: %s", str(e), exc_info=True)
             raise

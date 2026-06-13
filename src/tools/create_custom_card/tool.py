@@ -39,7 +39,6 @@ class CreateCustomCardTool(BaseTool):
         self._graph = get_card_generator_graph(llm, image_client, repository)
 
     def _run(self, description: str) -> str:
-        logger.info("CreateCustomCardTool invoked with description: '%s'", description)
         try:
             result = self._graph.invoke({
                 "description": description,
@@ -49,7 +48,6 @@ class CreateCustomCardTool(BaseTool):
             })
             card_name = result["card_specs"].get("name", "")
             card_path = result["card_path"]
-            logger.info("Card '%s' created at: %s", card_name, card_path)
             return f"Custom card '{card_name}' created at: {card_path}"
         except Exception as e:
             logger.error("CreateCustomCardTool failed: %s", e, exc_info=True)

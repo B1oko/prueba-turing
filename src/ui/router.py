@@ -12,14 +12,12 @@ def setup_ui(app: FastAPI) -> None:
     ui_dir = os.path.dirname(os.path.abspath(__file__))
     
     # Mount the static files directory
-    logger.info("Mounting static files from directory: '%s'", ui_dir)
     app.mount("/static", StaticFiles(directory=ui_dir), name="static")
 
     @app.get("/")
     async def serve_index():
         """Serve the frontend index HTML page."""
         index_path = os.path.join(ui_dir, "index.html")
-        logger.info("Serving frontend index page from '%s'", index_path)
         if os.path.exists(index_path):
             return FileResponse(index_path)
         logger.warning("Frontend index.html not found at '%s'", index_path)
@@ -30,7 +28,6 @@ def setup_ui(app: FastAPI) -> None:
         """Serve the official MTG Comprehensive Rules PDF."""
         root_dir = os.path.dirname(os.path.dirname(ui_dir))
         pdf_path = os.path.join(root_dir, "data", "MagicCompRules 20260417.pdf")
-        logger.info("Serving rules PDF from '%s'", pdf_path)
         if os.path.exists(pdf_path):
             return FileResponse(pdf_path, media_type="application/pdf")
         logger.warning("Rules PDF not found at '%s'", pdf_path)
