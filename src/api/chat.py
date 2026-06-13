@@ -74,7 +74,13 @@ async def chat(req: Request, chat_request: ChatRequest):
         result = await graph.ainvoke(
             {"messages": [HumanMessage(content=chat_request.message)]}, config=config
         )
-        assistant_msg = result["messages"][-1].content
+        raw_content = result["messages"][-1].content
+        if isinstance(raw_content, list):
+            assistant_msg = "".join(
+                block.get("text", "") for block in raw_content if isinstance(block, dict)
+            )
+        else:
+            assistant_msg = raw_content
         # Only look at messages from the current turn (after the last HumanMessage)
         last_human_idx = next(
             (len(result["messages"]) - 1 - i
