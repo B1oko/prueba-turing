@@ -1,8 +1,12 @@
 import asyncio
 from typing import Any
 
+from langchain_core.language_models import BaseChatModel
 from langchain_core.tools import BaseTool
-from pydantic import BaseModel
+from pydantic import BaseModel, PrivateAttr
+
+from src.clients.image_generation import ImageGenerationClient
+from src.tools.create_custom_card.graph import get_card_generator_graph
 
 
 class _CreateCustomCardInput(BaseModel):
@@ -17,10 +21,20 @@ class CreateCustomCardTool(BaseTool):
         "Returns the file path of the generated card."
     )
     args_schema: type[BaseModel] = _CreateCustomCardInput
-    agent: Any
+
+    _graph: Any = PrivateAttr()
+
+    def __init__(self, llm: BaseChatModel, image_client: ImageGenerationClient, **kwargs):
+        super().__init__(**kwargs)
+        self._graph = get_card_generator_graph(llm, image_client)
 
     def _run(self, description: str) -> str:
-        result = self.agent.run(description)
+        result = self._graph.invoke({
+            "description": description,
+            "card_specs": {},
+            "art_bytes": None,
+            "card_path": "",
+        })
         return f"Custom card '{result['card_specs'].get('name', '')}' created at: {result['card_path']}"
 
     async def _arun(self, description: str) -> str:
