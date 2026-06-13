@@ -71,12 +71,20 @@ async def chat(req: Request, chat_request: ChatRequest):
     try:
         graph = req.app.state.graph
         config = {"configurable": {"thread_id": chat_request.session_id}}
-        result = graph.invoke(
+        result = await graph.ainvoke(
             {"messages": [HumanMessage(content=chat_request.message)]}, config=config
         )
         assistant_msg = result["messages"][-1].content
-        cards = _extract_cards(result["messages"])
-        rules = _extract_rules(result["messages"])
+        # Only look at messages from the current turn (after the last HumanMessage)
+        last_human_idx = next(
+            (len(result["messages"]) - 1 - i
+             for i, msg in enumerate(reversed(result["messages"]))
+             if isinstance(msg, HumanMessage)),
+            0
+        )
+        current_turn_messages = result["messages"][last_human_idx:]
+        cards = _extract_cards(current_turn_messages)
+        rules = _extract_rules(current_turn_messages)
         return ChatResponse(response=assistant_msg, cards=cards, rules=rules)
     except Exception as e:
         logger.error("Error in /chat endpoint: %s", str(e))
