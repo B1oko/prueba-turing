@@ -225,6 +225,207 @@ h1, h2, h3, h4, h5, h6 {
   background-color: rgba(0, 0, 0, 0.3);
 }
 
+/* Premium MTG Mana symbols rendering */
+.mana-symbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 0.78rem;
+  font-weight: 800;
+  margin: 0 2px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4), inset 0 -2px 3px rgba(0,0,0,0.2);
+  vertical-align: middle;
+  font-family: var(--font-heading);
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  text-shadow: 0 1px 1px rgba(0,0,0,0.5);
+  user-select: none;
+}
+
+.mana-symbol.W {
+  background: radial-gradient(circle at 35% 35%, #fffde6 0%, #fef08a 70%, #ca8a04 100%);
+  color: #854d0e;
+  border-color: #eab308;
+}
+
+.mana-symbol.U {
+  background: radial-gradient(circle at 35% 35%, #93c5fd 0%, #3b82f6 70%, #1d4ed8 100%);
+  color: #fff;
+  border-color: #2563eb;
+}
+
+.mana-symbol.B {
+  background: radial-gradient(circle at 35% 35%, #c084fc 0%, #7c3aed 70%, #4c1d95 100%);
+  color: #f3e8ff;
+  border-color: #581c87;
+}
+
+.mana-symbol.R {
+  background: radial-gradient(circle at 35% 35%, #fca5a5 0%, #ef4444 70%, #991b1b 100%);
+  color: #fff;
+  border-color: #dc2626;
+}
+
+.mana-symbol.G {
+  background: radial-gradient(circle at 35% 35%, #86efac 0%, #22c55e 70%, #166534 100%);
+  color: #fff;
+  border-color: #16a34a;
+}
+
+.mana-symbol.C {
+  background: radial-gradient(circle at 35% 35%, #e5e7eb 0%, #9ca3af 70%, #4b5563 100%);
+  color: #111827;
+  border-color: #6b7280;
+}
+
+.mana-symbol.generic {
+  background: radial-gradient(circle at 35% 35%, #9ca3af 0%, #4b5563 70%, #1f2937 100%);
+  color: #f3f4f6;
+  border-color: #374151;
+  font-size: 0.72rem;
+  padding: 0 1px;
+}
+
+/* Special MTG Symbols */
+.mana-symbol.S {
+  background: radial-gradient(circle at 35% 35%, #e0f2fe 0%, #bae6fd 70%, #0369a1 100%);
+  color: #0c4a6e;
+  border-color: #38bdf8;
+}
+
+.mana-symbol.T, .mana-symbol.Q {
+  background: radial-gradient(circle at 35% 35%, #e5e7eb 0%, #9ca3af 70%, #4b5563 100%);
+  color: #111827;
+  border-color: #374151;
+  font-size: 0.85rem;
+}
+
+.mana-symbol.E {
+  background: radial-gradient(circle at 35% 35%, #fef08a 0%, #eab308 70%, #854d0e 100%);
+  color: #1e1b4b;
+  border-color: #ca8a04;
+}
+
+.mana-symbol.chaos {
+  background: radial-gradient(circle at 35% 35%, #e9d5ff 0%, #c084fc 70%, #6b21a8 100%);
+  color: #fff;
+  border-color: #a855f7;
+}
+
+.mana-symbol.W-half {
+  background: linear-gradient(90deg, radial-gradient(circle at 35% 35%, #fffde6 0%, #fef08a 70%, #ca8a04 100%) 50%, rgba(0,0,0,0.3) 50%);
+  color: #854d0e;
+  border-color: #eab308;
+}
+
+.mana-symbol.R-half {
+  background: linear-gradient(90deg, radial-gradient(circle at 35% 35%, #fca5a5 0%, #ef4444 70%, #991b1b 100%) 50%, rgba(0,0,0,0.3) 50%);
+  color: #fff;
+  border-color: #ef4444;
+}
+
+/* Phyrexian mana symbols */
+.mana-symbol.phyrexian {
+  border: 1px solid #b91c1c; /* Crimson blood border */
+  font-size: 0.82rem;
+}
+
+/* Hybrid mana splits */
+.mana-symbol.W-U {
+  background: linear-gradient(135deg, #fffde6 50%, #3b82f6 50%);
+  color: #1e2937;
+  border-color: #3b82f6;
+  font-size: 0.62rem;
+}
+.mana-symbol.W-B {
+  background: linear-gradient(135deg, #fffde6 50%, #7c3aed 50%);
+  color: #1e2937;
+  border-color: #7c3aed;
+  font-size: 0.62rem;
+}
+.mana-symbol.U-B {
+  background: linear-gradient(135deg, #3b82f6 50%, #7c3aed 50%);
+  color: #fff;
+  border-color: #7c3aed;
+  font-size: 0.62rem;
+}
+.mana-symbol.U-R {
+  background: linear-gradient(135deg, #3b82f6 50%, #ef4444 50%);
+  color: #fff;
+  border-color: #ef4444;
+  font-size: 0.62rem;
+}
+.mana-symbol.B-R {
+  background: linear-gradient(135deg, #7c3aed 50%, #ef4444 50%);
+  color: #fff;
+  border-color: #ef4444;
+  font-size: 0.62rem;
+}
+.mana-symbol.B-G {
+  background: linear-gradient(135deg, #7c3aed 50%, #22c55e 50%);
+  color: #fff;
+  border-color: #22c55e;
+  font-size: 0.62rem;
+}
+.mana-symbol.R-G {
+  background: linear-gradient(135deg, #ef4444 50%, #22c55e 50%);
+  color: #fff;
+  border-color: #22c55e;
+  font-size: 0.62rem;
+}
+.mana-symbol.R-W {
+  background: linear-gradient(135deg, #ef4444 50%, #fffde6 50%);
+  color: #1e2937;
+  border-color: #ef4444;
+  font-size: 0.62rem;
+}
+.mana-symbol.G-W {
+  background: linear-gradient(135deg, #22c55e 50%, #fffde6 50%);
+  color: #1e2937;
+  border-color: #22c55e;
+  font-size: 0.62rem;
+}
+.mana-symbol.G-U {
+  background: linear-gradient(135deg, #22c55e 50%, #3b82f6 50%);
+  color: #fff;
+  border-color: #3b82f6;
+  font-size: 0.62rem;
+}
+
+/* Mono-hybrid splits (2 / color) */
+.mana-symbol.2-W {
+  background: linear-gradient(135deg, #4b5563 50%, #fffde6 50%);
+  color: #1e2937;
+  border-color: #374151;
+  font-size: 0.62rem;
+}
+.mana-symbol.2-U {
+  background: linear-gradient(135deg, #4b5563 50%, #3b82f6 50%);
+  color: #fff;
+  border-color: #374151;
+  font-size: 0.62rem;
+}
+.mana-symbol.2-B {
+  background: linear-gradient(135deg, #4b5563 50%, #7c3aed 50%);
+  color: #fff;
+  border-color: #374151;
+  font-size: 0.62rem;
+}
+.mana-symbol.2-R {
+  background: linear-gradient(135deg, #4b5563 50%, #ef4444 50%);
+  color: #fff;
+  border-color: #374151;
+  font-size: 0.62rem;
+}
+.mana-symbol.2-G {
+  background: linear-gradient(135deg, #4b5563 50%, #22c55e 50%);
+  color: #fff;
+  border-color: #374151;
+  font-size: 0.62rem;
+}
+
 /* Health Dashboard */
 .health-dashboard {
   background-color: rgba(255, 255, 255, 0.02);
