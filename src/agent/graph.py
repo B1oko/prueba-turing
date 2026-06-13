@@ -19,7 +19,7 @@ def get_agent_graph(tools: list[BaseTool]):
 
     llm = ChatGoogleGenerativeAI(
         model=settings.GEMINI_MODEL,
-        temperature=0.1,
+        temperature=settings.GEMINI_TEMPERATURE,
         google_api_key=settings.GEMINI_API_KEY,
     )
 

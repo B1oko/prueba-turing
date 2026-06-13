@@ -20,6 +20,7 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("GEMINI_API_KEY", "GOOGLE_API_KEY"),
     )
     GEMINI_MODEL: str = "gemini-2.5-flash"
+    GEMINI_TEMPERATURE: float = 0
 
     # ChromaDB
     CHROMA_DB_PATH: str = "./.chroma_db"
