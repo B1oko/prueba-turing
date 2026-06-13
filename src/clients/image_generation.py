@@ -6,6 +6,8 @@ from google.genai import types
 
 logger = logging.getLogger(__name__)
 
+_IMAGE_MODEL = "imagen-4.0-fast-generate-001"
+
 
 class ImageGenerationClient(Protocol):
     def generate(self, prompt: str) -> bytes | None: ...
@@ -18,9 +20,9 @@ class ImagenGenerationClient:
     def generate(self, prompt: str) -> bytes | None:
         try:
             response = self._client.models.generate_images(
-                model="imagen-3.0-fast-generate-001",
+                model=_IMAGE_MODEL,
                 prompt=prompt,
-                config=types.GenerateImagesConfig(number_of_images=1, aspect_ratio="4:3"),
+                config=types.GenerateImagesConfig(number_of_images=1, aspect_ratio="16:9"),
             )
             return response.generated_images[0].image.image_bytes
         except Exception:
