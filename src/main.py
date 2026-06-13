@@ -5,9 +5,13 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from langchain_community.vectorstores import Chroma
 
+from src.agent.graph import get_agent_graph
 from src.api import chat, health
 from src.config.settings import get_settings
+from src.tools import CreateCustomCardTool, SearchCardsTool, SearchRulesTool
+from src.ui.router import setup_ui
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +29,21 @@ async def lifespan(app: FastAPI):
         )
     else:
         logger.info("LangSmith tracing disabled")
+
+    logger.info("Initializing vectorstore...")
+    vectorstore = Chroma(
+        collection_name=settings.CHROMA_COLLECTION_NAME,
+        persist_directory=settings.CHROMA_DB_PATH,
+    )
+    logger.info("Vectorstore ready")
+
+    tools = [
+        SearchRulesTool(vectorstore=vectorstore),
+        SearchCardsTool(),
+        CreateCustomCardTool(),
+    ]
+    app.state.graph = get_agent_graph(tools)
+    logger.info("Agent graph ready")
     yield
 
 
@@ -37,15 +56,12 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Mount static files for custom generated card mockups
 custom_cards_dir = "custom_cards"
 if not os.path.exists(custom_cards_dir):
     os.makedirs(custom_cards_dir)
 app.mount("/custom_cards", StaticFiles(directory=custom_cards_dir), name="custom_cards")
 
-from src.ui.router import setup_ui
 
-# Initialize integrated UI routing if configured
 if settings.SERVE_FRONTEND:
     setup_ui(app)
 

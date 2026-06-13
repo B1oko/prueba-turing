@@ -1,23 +1,12 @@
 import json
 import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from langchain_core.messages import HumanMessage, ToolMessage
 from pydantic import BaseModel
 
-from src.agent.graph import get_agent_graph
-
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
-_compiled_graph = None
-
-
-def get_graph():
-    global _compiled_graph
-    if _compiled_graph is None:
-        _compiled_graph = get_agent_graph()
-    return _compiled_graph
 
 
 class CardData(BaseModel):
@@ -48,7 +37,6 @@ class ChatResponse(BaseModel):
 
 
 def _extract_cards(messages: list) -> list[CardData] | None:
-    """Parse card data from search_cards ToolMessages in the graph result."""
     cards = []
     for msg in messages:
         if isinstance(msg, ToolMessage) and msg.name == "search_cards":
@@ -62,7 +50,6 @@ def _extract_cards(messages: list) -> list[CardData] | None:
 
 
 def _extract_rules(messages: list) -> list[RuleGrounding] | None:
-    """Parse rule grounding data from search_rules ToolMessages in the graph result."""
     rules = []
     for msg in messages:
         if isinstance(msg, ToolMessage) and msg.name == "search_rules":
@@ -80,13 +67,12 @@ def _extract_rules(messages: list) -> list[RuleGrounding] | None:
 
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest):
-    """Process a chat message using the LangGraph agent."""
+async def chat(req: Request, chat_request: ChatRequest):
     try:
-        graph = get_graph()
-        config = {"configurable": {"thread_id": request.session_id}}
+        graph = req.app.state.graph
+        config = {"configurable": {"thread_id": chat_request.session_id}}
         result = graph.invoke(
-            {"messages": [HumanMessage(content=request.message)]}, config=config
+            {"messages": [HumanMessage(content=chat_request.message)]}, config=config
         )
         assistant_msg = result["messages"][-1].content
         cards = _extract_cards(result["messages"])

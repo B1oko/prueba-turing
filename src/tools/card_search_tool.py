@@ -1,96 +1,99 @@
 import json
 import urllib.parse
+from typing import Any, Optional
 import requests
-from typing import Optional
-from langchain_core.tools import tool
-
-_api_cache = {}
+from pydantic import BaseModel, PrivateAttr
+from langchain_core.tools import BaseTool
 
 
-def _fetch_from_api(url: str) -> dict:
-    if url in _api_cache:
-        return _api_cache[url]
-    try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-        _api_cache[url] = data
-        return data
-    except Exception as e:
-        return {"error": str(e)}
+class _SearchCardsInput(BaseModel):
+    name: Optional[str] = None
+    colors: Optional[str] = None
+    type: Optional[str] = None
+    cmc: Optional[int] = None
+    text: Optional[str] = None
 
 
-@tool
-def search_cards(
-    name: Optional[str] = None,
-    colors: Optional[str] = None,
-    type: Optional[str] = None,
-    cmc: Optional[int] = None,
-    text: Optional[str] = None,
-) -> str:
-    """
-    Search for Magic: The Gathering cards using filters.
+class SearchCardsTool(BaseTool):
+    name: str = "search_cards"
+    description: str = (
+        "Search for Magic: The Gathering cards using filters. "
+        "Args: name (card name), colors (e.g. 'White,Red'), type (e.g. 'Creature'), "
+        "cmc (converted mana cost as integer), text (rules text or keywords)."
+    )
+    args_schema: type[BaseModel] = _SearchCardsInput
 
-    Args:
-        name: Name of the card (e.g., 'Black Lotus', 'Battlefield Raptor').
-        colors: Color of the card (e.g., 'White', 'Red', 'White,Red' for multicolored).
-        type: Card type or subtype (e.g., 'Creature', 'Warrior', 'Artifact', 'Instant').
-        cmc: Converted mana cost of the card (e.g., 1, 2, 6).
-        text: Rules text or keywords on the card (e.g., 'first strike', 'lifelink').
+    _session: Any = PrivateAttr()
+    _cache: dict = PrivateAttr()
 
-    Returns:
-        A JSON string with a list of matching cards and their details.
-    """
-    base_url = "https://api.magicthegathering.io/v1/cards"
-    params = {}
+    def __init__(self, session: requests.Session = None, **kwargs):
+        super().__init__(**kwargs)
+        self._session = session or requests.Session()
+        self._cache = {}
 
-    if name:
-        params["name"] = name
-    if colors:
-        params["colors"] = colors
-    if type:
-        params["type"] = type
-    if cmc is not None:
-        params["cmc"] = str(cmc)
-    if text:
-        params["text"] = text
+    def _fetch(self, url: str) -> dict:
+        if url in self._cache:
+            return self._cache[url]
+        try:
+            response = self._session.get(url, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            self._cache[url] = data
+            return data
+        except Exception as e:
+            return {"error": str(e)}
 
-    params["pageSize"] = "8"
+    def _run(
+        self,
+        name: Optional[str] = None,
+        colors: Optional[str] = None,
+        type: Optional[str] = None,
+        cmc: Optional[int] = None,
+        text: Optional[str] = None,
+    ) -> str:
+        params = {}
+        if name:
+            params["name"] = name
+        if colors:
+            params["colors"] = colors
+        if type:
+            params["type"] = type
+        if cmc is not None:
+            params["cmc"] = str(cmc)
+        if text:
+            params["text"] = text
 
-    if not params:
-        return json.dumps({"error": "Please provide at least one filter for the card search."})
+        if not params:
+            return json.dumps({"error": "Please provide at least one filter for the card search."})
 
-    query_string = urllib.parse.urlencode(params)
-    url = f"{base_url}?{query_string}"
-    data = _fetch_from_api(url)
+        params["pageSize"] = "8"
+        url = f"https://api.magicthegathering.io/v1/cards?{urllib.parse.urlencode(params)}"
+        data = self._fetch(url)
 
-    if "error" in data:
-        return json.dumps({"error": f"Error connecting to MTG API: {data['error']}"})
+        if "error" in data:
+            return json.dumps({"error": f"Error connecting to MTG API: {data['error']}"})
 
-    cards = data.get("cards", [])
-    if not cards:
-        return json.dumps({"cards": [], "message": "No cards found matching the specified criteria."})
+        cards = data.get("cards", [])
+        if not cards:
+            return json.dumps({"cards": [], "message": "No cards found matching the specified criteria."})
 
-    seen_names = set()
-    result = []
+        seen_names = set()
+        result = []
+        for card in cards:
+            card_name = card.get("name", "Unknown")
+            if card_name in seen_names:
+                continue
+            seen_names.add(card_name)
+            entry = {
+                "name": card_name,
+                "mana_cost": card.get("manaCost", ""),
+                "type": card.get("type", "Unknown"),
+                "text": card.get("text", ""),
+                "image_url": card.get("imageUrl"),
+            }
+            if card.get("power") and card.get("toughness"):
+                entry["power"] = card["power"]
+                entry["toughness"] = card["toughness"]
+            result.append(entry)
 
-    for card in cards:
-        card_name = card.get("name", "Unknown")
-        if card_name in seen_names:
-            continue
-        seen_names.add(card_name)
-
-        entry = {
-            "name": card_name,
-            "mana_cost": card.get("manaCost", ""),
-            "type": card.get("type", "Unknown"),
-            "text": card.get("text", ""),
-            "image_url": card.get("imageUrl"),
-        }
-        if card.get("power") and card.get("toughness"):
-            entry["power"] = card["power"]
-            entry["toughness"] = card["toughness"]
-
-        result.append(entry)
-
-    return json.dumps({"cards": result})
+        return json.dumps({"cards": result})
