@@ -1,5 +1,6 @@
 import { subscribe, addChatMessage, addRecentCard, setSelectedCard, resetSession, getSessionState } from '../state.js';
 import { sendChatMessage } from '../api.js';
+import { loadCustomCards } from './customCardsList.js';
 import { formatMarkdown } from '../utils/markdown.js';
 import { renderManaCost } from '../utils/manaRenderer.js';
 
@@ -343,6 +344,7 @@ export async function sendMessage(text) {
           };
 
           addRecentCard(mockCustomCard);
+          loadCustomCards();
         }
       }
     } else {

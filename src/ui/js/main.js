@@ -1,6 +1,6 @@
 // Punto de entrada principal para la UI modularizada de MTG Call Center
 import { initSession } from './state.js';
-import { initHealthDashboard } from './components/healthDashboard.js';
+import { initCustomCardsList } from './components/customCardsList.js';
 import { initThemeSelector } from './components/themeSelector.js';
 import { initRecentCardsList } from './components/recentCardsList.js';
 import { initCardInspector } from './components/cardInspector.js';
@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
   
   // 2. Inicializar los componentes de la interfaz
   initThemeSelector();
-  initHealthDashboard();
+  initCustomCardsList();
   initRecentCardsList();
   initCardInspector();
   initChatArea();

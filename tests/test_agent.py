@@ -1,14 +1,11 @@
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from langchain_core.messages import AIMessage, HumanMessage
-from src.config.settings import get_settings
-from src.agent.graph import get_agent_graph
+from src.agent.mtg_agent import MTGAgent
 
-@patch("src.agent.graph.ChatGoogleGenerativeAI")
-def test_agent_graph_execution(mock_chat_class):
+def test_agent_graph_execution():
     # Setup mock LLM
     mock_llm = MagicMock()
-    mock_chat_class.return_value = mock_llm
     
     # Mock bind_tools to return a model with tools bound
     mock_bound_llm = MagicMock()
@@ -19,14 +16,12 @@ def test_agent_graph_execution(mock_chat_class):
         content="¡Hola! Soy tu asistente de Magic. ¿En qué te puedo ayudar hoy?"
     )
     
-    # Compile graph (with patched ChatGoogleGenerativeAI)
-    get_settings.cache_clear()
-    with patch.dict("os.environ", {"GOOGLE_API_KEY": "fake_key"}, clear=False):
-        graph = get_agent_graph()
+    # Instantiate MTGAgent with mock LLM and empty tools list
+    agent = MTGAgent(llm=mock_llm, tools=[])
         
     # Execute graph with a user message
     config = {"configurable": {"thread_id": "test_thread"}}
-    result = graph.invoke(
+    result = agent.invoke(
         {"messages": [HumanMessage(content="Hola")]},
         config=config
     )

@@ -115,4 +115,36 @@ def render_card(card_specs: dict, art_bytes: bytes | None) -> str:
     )
     filepath = os.path.join("custom_cards", f"{filename}.png")
     img.save(filepath)
+
+    # Save JSON metadata for the custom card
+    import json
+    json_path = os.path.join("custom_cards", f"{filename}.json")
+    
+    color_map = {
+        "white": "W",
+        "blue": "U",
+        "black": "B",
+        "red": "R",
+        "green": "G"
+    }
+    colors_lower = [c.lower() for c in card_specs.get("colors", [])]
+    mapped_colors = [color_map.get(c, c.upper()) for c in colors_lower]
+
+    card_data = {
+        "name": card_specs.get("name", ""),
+        "mana_cost": card_specs.get("mana_cost", ""),
+        "type": card_specs.get("type_line", ""),
+        "text": card_specs.get("rules_text", ""),
+        "image_url": f"/custom_cards/{filename}.png",
+        "power": card_specs.get("power"),
+        "toughness": card_specs.get("toughness"),
+        "rarity": "Mythic Rare",
+        "flavor": card_specs.get("flavor_text", ""),
+        "colors": mapped_colors,
+        "set": "custom"
+    }
+    
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(card_data, f, ensure_ascii=False, indent=2)
+
     return filepath

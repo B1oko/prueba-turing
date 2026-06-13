@@ -10,7 +10,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 
 from src.agent.card_generator_agent import CardGeneratorAgent
 from src.agent.mtg_agent import MTGAgent
-from src.api import chat, health
+from src.api import chat, health, custom_cards
 from src.clients import MTGClient
 from src.config.settings import get_settings
 from src.clients import ImagenGenerationClient
@@ -92,3 +92,4 @@ if settings.SERVE_FRONTEND:
 
 app.include_router(health.router)
 app.include_router(chat.router)
+app.include_router(custom_cards.router)

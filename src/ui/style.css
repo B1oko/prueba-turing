@@ -1560,3 +1560,25 @@ h1, h2, h3, h4, h5, h6 {
     max-width: 92%;
   }
 }
+
+/* Custom Cards Sidebar Styles */
+.custom-cards-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 16px 8px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  border: 1px dashed var(--border-color);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.01);
+  margin-top: 5px;
+}
+.custom-cards-empty p {
+  margin: 0 0 4px 0;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.custom-cards-empty span {
+  font-size: 0.75rem;
+  display: block;
+}

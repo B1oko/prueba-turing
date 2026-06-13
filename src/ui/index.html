@@ -57,22 +57,11 @@
 
       <!-- Mana selector section removed -->
 
-      <!-- System Health Dashboard -->
-      <div class="sidebar-section">
-        <h3 class="section-title">Estado del Sistema</h3>
-        <div class="health-dashboard">
-          <div class="health-item">
-            <span class="health-label">API Backend</span>
-            <span class="badge badge-loading" id="apiBadge">Cargando...</span>
-          </div>
-          <div class="health-item">
-            <span class="health-label">Reglas (VectorDB)</span>
-            <span class="badge badge-loading" id="dbBadge">Cargando...</span>
-          </div>
-          <div class="health-item">
-            <span class="health-label">Gemini API Key</span>
-            <span class="badge badge-loading" id="keyBadge">Cargando...</span>
-          </div>
+      <!-- Custom Cards Section -->
+      <div class="sidebar-section flex-grow" id="customCardsSection">
+        <h3 class="section-title">Cartas Creadas</h3>
+        <div class="recent-cards-list" id="customCardsList">
+          <!-- Dynamically filled by JS -->
         </div>
       </div>
 

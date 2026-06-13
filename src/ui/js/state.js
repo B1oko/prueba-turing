@@ -4,7 +4,8 @@ let state = {
   sessionId: "",
   chatHistory: [],
   recentCards: [],
-  selectedCard: null
+  selectedCard: null,
+  customCards: []
 };
 
 // Mapa de suscriptores para eventos de cambio de estado
@@ -12,7 +13,8 @@ const subscribers = {
   sessionId: [],
   chatHistory: [],
   recentCards: [],
-  selectedCard: []
+  selectedCard: [],
+  customCards: []
 };
 
 /**
@@ -148,6 +150,16 @@ export function resetSession() {
   notify("chatHistory");
   notify("recentCards");
   notify("selectedCard");
+}
+
+/**
+ * Actualizar la lista de cartas customizadas.
+ * 
+ * @param {Array} cards Lista de cartas customizadas
+ */
+export function setCustomCards(cards) {
+  state.customCards = cards;
+  notify("customCards");
 }
 
 /**
