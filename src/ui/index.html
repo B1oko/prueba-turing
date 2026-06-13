@@ -109,68 +109,47 @@
       </form>
     </section>
 
-    <!-- Card Inspector -->
-    <aside class="app-card-inspector" id="cardInspector">
-      <div class="inspector-header">
-        <h3>Inspector de Cartas</h3>
-        <button class="btn-close-inspector" id="closeInspectorBtn" style="display: none;" title="Cerrar Inspector">✕</button>
-      </div>
-
+    <!-- Card Inspector (Modal Popup) -->
+    <div class="app-card-inspector" id="cardInspector">
+      <button class="btn-close-inspector" id="closeInspectorBtn" title="Cerrar Inspector">✕</button>
+      
       <div class="inspector-content" id="inspectorContent">
-        
-        <!-- Default State (No card selected) -->
-        <div class="no-card-selected" id="noCardSelected">
-          <div class="card-back-3d-wrapper">
-            <div class="card-back-3d">
-              <div class="card-back-inner">
-                <div class="mtg-logo-back">MTG</div>
-                <div class="mana-dots">
-                  <span class="dot w">☀️</span>
-                  <span class="dot u">💧</span>
-                  <span class="dot b">💀</span>
-                  <span class="dot r">🔥</span>
-                  <span class="dot g">🌳</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <p class="no-card-msg">Selecciona una carta en el chat para ver detalles en 3D e inspeccionar sus reglas.</p>
-        </div>
-
         <!-- Selected Card Details (Hidden by default) -->
         <div class="card-details-view" id="cardDetailsView" style="display: none;">
+          
           <div class="inspector-card-container">
             <div class="interactive-3d-card" id="interactiveCard">
-              <!-- Rendered image or frame goes here -->
               <div class="card-shine-foil"></div>
             </div>
           </div>
 
-          <div class="card-properties-sheet glass-panel">
-            <div class="property-row name-cost">
-              <h2 class="property-title" id="cardNameVal">Nombre de Carta</h2>
-              <span class="mana-badge" id="cardManaVal">{0}</span>
-            </div>
+          <div class="inspector-modal-container glass-panel">
+            <div class="card-properties-sheet">
+              <div class="property-row name-cost">
+                <h2 class="property-title" id="cardNameVal">Nombre de Carta</h2>
+                <span class="mana-badge" id="cardManaVal">{0}</span>
+              </div>
 
-            <div class="property-row type-line">
-              <span id="cardTypeVal">Criatura - Humano</span>
-              <span class="pt-badge" id="cardPtVal" style="display: none;">⚔️ 2/2</span>
-            </div>
+              <div class="property-row type-line">
+                <span id="cardTypeVal">Criatura - Humano</span>
+                <span class="pt-badge" id="cardPtVal" style="display: none;">⚔️ 2/2</span>
+              </div>
 
-            <hr class="properties-divider">
+              <hr class="properties-divider">
 
-            <div class="property-row rules-text-box">
-              <span class="property-label">Habilidades y Reglas:</span>
-              <p class="property-body-text" id="cardRulesVal">Texto de reglas...</p>
+              <div class="property-row rules-text-box">
+                <span class="property-label">Habilidades y Reglas:</span>
+                <p class="property-body-text" id="cardRulesVal">Texto de reglas...</p>
+              </div>
             </div>
           </div>
-        </div>
 
+        </div>
       </div>
-    </aside>
+    </div>
 
   </div>
 
-  <script src="/static/app.js"></script>
+  <script type="module" src="/static/js/main.js"></script>
 </body>
 </html>
