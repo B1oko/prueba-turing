@@ -1,4 +1,6 @@
 import os
+import logging
+from contextlib import asynccontextmanager
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Header
@@ -8,10 +10,28 @@ from pydantic import BaseModel
 from src.agent.graph import get_agent_graph
 from src.config.settings import get_settings
 
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    settings = get_settings()
+    if settings.LANGSMITH_TRACING and settings.LANGSMITH_API_KEY:
+        os.environ["LANGSMITH_TRACING"] = "true"
+        os.environ["LANGSMITH_API_KEY"] = settings.LANGSMITH_API_KEY
+        os.environ["LANGSMITH_PROJECT"] = settings.LANGSMITH_PROJECT
+        os.environ["LANGSMITH_ENDPOINT"] = settings.LANGSMITH_ENDPOINT
+        logger.info("LangSmith tracing enabled for project '%s'", settings.LANGSMITH_PROJECT)
+    else:
+        logger.info("LangSmith tracing disabled")
+    yield
+
+
 app = FastAPI(
     title="MTG Chatbot API",
     description="Backend API running the LangGraph agent for Magic: The Gathering rules & cards queries.",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 
@@ -37,7 +57,7 @@ def get_graph(api_key: Optional[str] = None):
     global _compiled_graph, _active_api_key
 
     settings = get_settings()
-    current_key = api_key or settings.gemini_api_key
+    current_key = api_key or settings.GEMINI_API_KEY
 
     if _compiled_graph is None or current_key != _active_api_key:
         _compiled_graph = get_agent_graph(api_key=api_key)
@@ -52,8 +72,8 @@ async def health():
     settings = get_settings()
     return {
         "status": "healthy",
-        "database_initialized": os.path.exists(settings.chroma_db_path),
-        "api_key_configured": bool(settings.gemini_api_key),
+        "database_initialized": os.path.exists(settings.CHROMA_DB_PATH),
+        "api_key_configured": bool(settings.GEMINI_API_KEY),
     }
 
 
@@ -78,7 +98,5 @@ async def chat(request: ChatRequest, x_gemini_api_key: Optional[str] = Header(No
         return ChatResponse(response=assistant_msg)
 
     except Exception as e:
-        import logging
-
-        logging.error(f"Error in /chat endpoint: {str(e)}")
+        logger.error("Error in /chat endpoint: %s", str(e))
         raise HTTPException(status_code=500, detail=str(e))

@@ -10,8 +10,8 @@ def get_vectorstore(db_path: str | None = None, collection_name: str | None = No
     which runs entirely offline and doesn't require an API key.
     """
     settings = get_settings()
-    db_path = db_path or settings.chroma_db_path
-    collection_name = collection_name or settings.chroma_collection_name
+    db_path = db_path or settings.CHROMA_DB_PATH
+    collection_name = collection_name or settings.CHROMA_COLLECTION_NAME
     # By omitting the embedding_function argument, LangChain's Chroma wrapper
     # automatically falls back to the default local ONNX MiniLM embedding function.
     vectorstore = Chroma(

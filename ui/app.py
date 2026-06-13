@@ -45,7 +45,7 @@ st.markdown(
 )
 
 settings = get_settings()
-API_URL = settings.api_url
+API_URL = settings.API_URL
 
 # Initialize session state variables
 if "session_id" not in st.session_state:

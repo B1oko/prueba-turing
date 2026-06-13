@@ -11,13 +11,23 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    gemini_api_key: str | None = Field(
+    API_URL: str = "http://localhost:8000"
+
+    # Gemini API Key
+    GEMINI_API_KEY: str | None = Field(
         default=None,
         validation_alias=AliasChoices("GEMINI_API_KEY", "GOOGLE_API_KEY"),
     )
-    api_url: str = "http://localhost:8000"
-    chroma_db_path: str = "./.chroma_db"
-    chroma_collection_name: str = "mtg_rules"
+
+    # ChromaDB
+    CHROMA_DB_PATH: str = "./.chroma_db"
+    CHROMA_COLLECTION_NAME: str = "mtg_rules"
+
+    # LangSmith observability
+    LANGSMITH_TRACING: bool = False
+    LANGSMITH_API_KEY: str | None = None
+    LANGSMITH_PROJECT: str = "prueba-turing"
+    LANGSMITH_ENDPOINT: str = "https://api.smith.langchain.com"
 
 
 @lru_cache
