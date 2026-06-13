@@ -48,19 +48,20 @@ class LocalCustomCardRepository:
 
     def save(self, card_specs: dict, image_bytes: bytes | None) -> Card:
         filename = _to_filename(card_specs["name"])
-        image_url = f"/custom_cards/{filename}.png"
+        card_dir = os.path.join(self._base_dir, filename)
+        os.makedirs(card_dir, exist_ok=True)
+
+        image_url = f"/custom_cards/{filename}/{filename}.png"
 
         if image_bytes:
-            png_path = os.path.join(self._base_dir, f"{filename}.png")
+            png_path = os.path.join(card_dir, f"{filename}.png")
             with open(png_path, "wb") as f:
                 f.write(image_bytes)
-            logger.info("Saved card image to '%s'", png_path)
 
         card = _specs_to_card(card_specs, image_url)
-        json_path = os.path.join(self._base_dir, f"{filename}.json")
+        json_path = os.path.join(card_dir, f"{filename}.json")
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(card.model_dump(), f, ensure_ascii=False, indent=2)
-        logger.info("Saved card metadata to '%s'", json_path)
 
         return card
 
@@ -68,13 +69,15 @@ class LocalCustomCardRepository:
         if not os.path.exists(self._base_dir):
             return []
         cards = []
-        for filename in os.listdir(self._base_dir):
-            if not filename.endswith(".json"):
+        for entry in os.scandir(self._base_dir):
+            if not entry.is_dir():
                 continue
-            filepath = os.path.join(self._base_dir, filename)
+            json_path = os.path.join(entry.path, f"{entry.name}.json")
+            if not os.path.exists(json_path):
+                continue
             try:
-                with open(filepath, encoding="utf-8") as f:
+                with open(json_path, encoding="utf-8") as f:
                     cards.append(Card(**json.load(f)))
             except Exception as e:
-                logger.error("Failed to load card metadata from '%s': %s", filepath, e)
+                logger.error("Failed to load card metadata from '%s': %s", json_path, e)
         return cards
