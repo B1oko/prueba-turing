@@ -1,8 +1,10 @@
+import asyncio
 import os
-from typing import Optional, List
-from pydantic import BaseModel
+from typing import List, Optional
+
 from PIL import Image, ImageDraw, ImageFont
 from langchain_core.tools import BaseTool
+from pydantic import BaseModel
 
 
 class _CreateCustomCardInput(BaseModel):
@@ -55,14 +57,22 @@ class CreateCustomCardTool(BaseTool):
         else:
             theme_color = color_map["colorless"]
 
-        if theme_color in [color_map["black"], color_map["red"], color_map["green"], color_map["blue"]]:
+        if theme_color in [
+            color_map["black"],
+            color_map["red"],
+            color_map["green"],
+            color_map["blue"],
+        ]:
             card_text_color = (255, 255, 255)
         else:
             card_text_color = (0, 0, 0)
 
         frame_margin = 14
         draw.rectangle(
-            [(frame_margin, frame_margin), (width - frame_margin, height - frame_margin)],
+            [
+                (frame_margin, frame_margin),
+                (width - frame_margin, height - frame_margin),
+            ],
             fill=theme_color,
             outline=(20, 20, 20),
             width=2,
@@ -74,7 +84,11 @@ class CreateCustomCardTool(BaseTool):
         art_box = [(22, 62), (width - 22, 280)]
         draw.rectangle(art_box, fill=(120, 120, 120), outline=(0, 0, 0), width=1)
         draw.line([art_box[0], art_box[1]], fill=(180, 180, 180), width=2)
-        draw.line([(art_box[0][0], art_box[1][1]), (art_box[1][0], art_box[0][1])], fill=(180, 180, 180), width=2)
+        draw.line(
+            [(art_box[0][0], art_box[1][1]), (art_box[1][0], art_box[0][1])],
+            fill=(180, 180, 180),
+            width=2,
+        )
 
         type_box = [(22, 288), (width - 22, 320)]
         draw.rectangle(type_box, fill=(255, 255, 255, 128), outline=(0, 0, 0), width=1)
@@ -119,13 +133,46 @@ class CreateCustomCardTool(BaseTool):
             draw.rectangle(pt_box, fill=(255, 255, 255), outline=(0, 0, 0), width=2)
             draw.text((width - 65, 506), pt_text, fill=(0, 0, 0), font=font_pt)
 
-        draw.text((width // 2 - 50, 160), "CUSTOM CARD", fill=(255, 255, 255), font=font_bold)
-        draw.text((width // 2 - 60, 185), f"({'-'.join(colors)})", fill=(220, 220, 220), font=font_italic)
+        draw.text(
+            (width // 2 - 50, 160), "CUSTOM CARD", fill=(255, 255, 255), font=font_bold
+        )
+        draw.text(
+            (width // 2 - 60, 185),
+            f"({'-'.join(colors)})",
+            fill=(220, 220, 220),
+            font=font_italic,
+        )
 
         output_dir = "custom_cards"
         os.makedirs(output_dir, exist_ok=True)
-        filename = "".join(x for x in name if x.isalnum() or x in " -_").strip().replace(" ", "_").lower()
+        filename = (
+            "".join(x for x in name if x.isalnum() or x in " -_")
+            .strip()
+            .replace(" ", "_")
+            .lower()
+        )
         filepath = os.path.join(output_dir, f"{filename}.png")
         img.save(filepath)
 
         return f"Success! Custom card created successfully. Image saved at: {filepath}"
+
+    async def _arun(
+        self,
+        name: str,
+        mana_cost: str,
+        colors: List[str],
+        type_line: str,
+        rules_text: str,
+        power: Optional[str] = None,
+        toughness: Optional[str] = None,
+    ) -> str:
+        return await asyncio.to_thread(
+            self._run,
+            name=name,
+            mana_cost=mana_cost,
+            colors=colors,
+            type_line=type_line,
+            rules_text=rules_text,
+            power=power,
+            toughness=toughness,
+        )

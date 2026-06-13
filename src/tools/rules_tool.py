@@ -1,7 +1,8 @@
 import json
-from typing import Any, Optional
-from pydantic import BaseModel, PrivateAttr
+from typing import Any
+
 from langchain_core.tools import BaseTool
+from pydantic import BaseModel, PrivateAttr
 
 
 class _SearchRulesInput(BaseModel):
@@ -22,20 +23,33 @@ class SearchRulesTool(BaseTool):
         super().__init__(**kwargs)
         self._vectorstore = vectorstore
 
-    def _run(self, query: str) -> str:
-        try:
-            results = self._vectorstore.similarity_search(query, k=5)
-            if not results:
-                return json.dumps({"rules": [], "message": "No matching rules found in the Comprehensive Rules."})
-            rules = []
-            for doc in results:
-                rule_id = doc.metadata.get("rule_id", "Unknown")
-                page = doc.metadata.get("page", "Unknown")
-                rules.append({
+    def _format(self, results) -> str:
+        if not results:
+            return json.dumps(
+                {
+                    "rules": [],
+                    "message": "No matching rules found in the Comprehensive Rules.",
+                }
+            )
+        rules = []
+        for doc in results:
+            rule_id = doc.metadata.get("rule_id", "Unknown")
+            page = doc.metadata.get("page", "Unknown")
+            rules.append(
+                {
                     "rule_id": str(rule_id),
                     "page": int(page) if str(page).isdigit() else 0,
                     "text": doc.page_content,
-                })
-            return json.dumps({"rules": rules})
+                }
+            )
+        return json.dumps({"rules": rules})
+
+    def _run(self, **kwargs) -> str:
+        raise NotImplementedError("Use async via _arun")
+
+    async def _arun(self, query: str) -> str:
+        try:
+            results = await self._vectorstore.asimilarity_search(query, k=5)
+            return self._format(results)
         except Exception as e:
             return json.dumps({"error": f"Error searching rules database: {str(e)}"})

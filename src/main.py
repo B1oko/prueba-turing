@@ -10,7 +10,8 @@ from langchain_community.vectorstores import Chroma
 from src.agent.graph import get_agent_graph
 from src.api import chat, health
 from src.config.settings import get_settings
-from src.tools import CreateCustomCardTool, SearchCardsTool, SearchRulesTool
+from src.clients import MTGClient
+from src.tools import CreateCustomCardTool, SearchCardsTool, SearchRulesTool, SearchSetsTool
 from src.ui.router import setup_ui
 
 logger = logging.getLogger(__name__)
@@ -37,9 +38,11 @@ async def lifespan(app: FastAPI):
     )
     logger.info("Vectorstore ready")
 
+    mtg_client = MTGClient()
     tools = [
         SearchRulesTool(vectorstore=vectorstore),
-        SearchCardsTool(),
+        SearchCardsTool(client=mtg_client),
+        SearchSetsTool(client=mtg_client),
         CreateCustomCardTool(),
     ]
     app.state.graph = get_agent_graph(tools)

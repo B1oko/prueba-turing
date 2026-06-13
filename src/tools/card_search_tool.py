@@ -1,9 +1,10 @@
 import json
-import urllib.parse
 from typing import Any, Optional
-import requests
-from pydantic import BaseModel, PrivateAttr
+
 from langchain_core.tools import BaseTool
+from pydantic import BaseModel, PrivateAttr
+
+from src.clients.mtg_client import ICardSearch
 
 
 class _SearchCardsInput(BaseModel):
@@ -23,61 +24,21 @@ class SearchCardsTool(BaseTool):
     )
     args_schema: type[BaseModel] = _SearchCardsInput
 
-    _session: Any = PrivateAttr()
-    _cache: dict = PrivateAttr()
+    _client: Any = PrivateAttr()
 
-    def __init__(self, session: requests.Session = None, **kwargs):
+    def __init__(self, client: ICardSearch, **kwargs):
         super().__init__(**kwargs)
-        self._session = session or requests.Session()
-        self._cache = {}
+        self._client = client
 
-    def _fetch(self, url: str) -> dict:
-        if url in self._cache:
-            return self._cache[url]
-        try:
-            response = self._session.get(url, timeout=10)
-            response.raise_for_status()
-            data = response.json()
-            self._cache[url] = data
-            return data
-        except Exception as e:
-            return {"error": str(e)}
-
-    def _run(
-        self,
-        name: Optional[str] = None,
-        colors: Optional[str] = None,
-        type: Optional[str] = None,
-        cmc: Optional[int] = None,
-        text: Optional[str] = None,
-    ) -> str:
-        params = {}
-        if name:
-            params["name"] = name
-        if colors:
-            params["colors"] = colors
-        if type:
-            params["type"] = type
-        if cmc is not None:
-            params["cmc"] = str(cmc)
-        if text:
-            params["text"] = text
-
-        if not params:
-            return json.dumps({"error": "Please provide at least one filter for the card search."})
-
-        params["pageSize"] = "8"
-        url = f"https://api.magicthegathering.io/v1/cards?{urllib.parse.urlencode(params)}"
-        data = self._fetch(url)
-
-        if "error" in data:
-            return json.dumps({"error": f"Error connecting to MTG API: {data['error']}"})
-
-        cards = data.get("cards", [])
+    def _format(self, cards: list[dict]) -> str:
         if not cards:
-            return json.dumps({"cards": [], "message": "No cards found matching the specified criteria."})
-
-        seen_names = set()
+            return json.dumps(
+                {
+                    "cards": [],
+                    "message": "No cards found matching the specified criteria.",
+                }
+            )
+        seen_names: set = set()
         result = []
         for card in cards:
             card_name = card.get("name", "Unknown")
@@ -95,5 +56,32 @@ class SearchCardsTool(BaseTool):
                 entry["power"] = card["power"]
                 entry["toughness"] = card["toughness"]
             result.append(entry)
-
         return json.dumps({"cards": result})
+
+    def _validate_filters(self, name, colors, type, cmc, text) -> Optional[str]:
+        if not any([name, colors, type, cmc is not None, text]):
+            return json.dumps(
+                {"error": "Please provide at least one filter for the card search."}
+            )
+        return None
+
+    def _run(self, **kwargs) -> str:
+        raise NotImplementedError("Use async via _arun")
+
+    async def _arun(
+        self,
+        name: Optional[str] = None,
+        colors: Optional[str] = None,
+        type: Optional[str] = None,
+        cmc: Optional[int] = None,
+        text: Optional[str] = None,
+    ) -> str:
+        if err := self._validate_filters(name, colors, type, cmc, text):
+            return err
+        try:
+            cards = await self._client.search_cards(
+                name=name, colors=colors, type=type, cmc=cmc, text=text
+            )
+        except Exception as e:
+            return json.dumps({"error": f"Error connecting to MTG API: {e}"})
+        return self._format(cards)
