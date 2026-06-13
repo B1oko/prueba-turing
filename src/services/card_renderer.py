@@ -1,5 +1,4 @@
 import io
-import os
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -13,7 +12,6 @@ _COLOR_MAP = {
     "gold": (197, 160, 89),
     "colorless": (170, 170, 170),
 }
-_DARK_COLORS = {"black", "red", "green", "blue"}
 
 _ART_BOX_TL = (22, 62)
 _ART_BOX_BR = (378, 280)
@@ -45,7 +43,7 @@ def _wrap_text(text: str, max_chars: int) -> list[str]:
     return lines
 
 
-def render_card(card_specs: dict, art_bytes: bytes | None) -> str:
+def render_card(card_specs: dict, art_bytes: bytes | None) -> bytes:
     width, height = 400, 560
     img = Image.new("RGB", (width, height), color=(0, 0, 0))
     draw = ImageDraw.Draw(img)
@@ -64,7 +62,6 @@ def render_card(card_specs: dict, art_bytes: bytes | None) -> str:
         outline=(20, 20, 20),
         width=2,
     )
-
     draw.rectangle([(22, 22), (width - 22, 54)], fill=(255, 255, 255, 128), outline=(0, 0, 0), width=1)
 
     if art_bytes:
@@ -106,45 +103,6 @@ def render_card(card_specs: dict, art_bytes: bytes | None) -> str:
         draw.rectangle(pt_box, fill=(255, 255, 255), outline=(0, 0, 0), width=2)
         draw.text((width - 65, 506), f"{card_specs['power']}/{card_specs['toughness']}", fill=(0, 0, 0), font=font_pt)
 
-    os.makedirs("custom_cards", exist_ok=True)
-    filename = (
-        "".join(x for x in card_specs["name"] if x.isalnum() or x in " -_")
-        .strip()
-        .replace(" ", "_")
-        .lower()
-    )
-    filepath = os.path.join("custom_cards", f"{filename}.png")
-    img.save(filepath)
-
-    # Save JSON metadata for the custom card
-    import json
-    json_path = os.path.join("custom_cards", f"{filename}.json")
-    
-    color_map = {
-        "white": "W",
-        "blue": "U",
-        "black": "B",
-        "red": "R",
-        "green": "G"
-    }
-    colors_lower = [c.lower() for c in card_specs.get("colors", [])]
-    mapped_colors = [color_map.get(c, c.upper()) for c in colors_lower]
-
-    card_data = {
-        "name": card_specs.get("name", ""),
-        "mana_cost": card_specs.get("mana_cost", ""),
-        "type": card_specs.get("type_line", ""),
-        "text": card_specs.get("rules_text", ""),
-        "image_url": f"/custom_cards/{filename}.png",
-        "power": card_specs.get("power"),
-        "toughness": card_specs.get("toughness"),
-        "rarity": "Mythic Rare",
-        "flavor": card_specs.get("flavor_text", ""),
-        "colors": mapped_colors,
-        "set": "custom"
-    }
-    
-    with open(json_path, "w", encoding="utf-8") as f:
-        json.dump(card_data, f, ensure_ascii=False, indent=2)
-
-    return filepath
+    buffer = io.BytesIO()
+    img.save(buffer, format="PNG")
+    return buffer.getvalue()
