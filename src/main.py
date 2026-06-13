@@ -1,9 +1,7 @@
 import os
 import logging
 from contextlib import asynccontextmanager
-from typing import Optional
-
-from fastapi import FastAPI, HTTPException, Header
+from fastapi import FastAPI, HTTPException
 from langchain_core.messages import HumanMessage
 from pydantic import BaseModel
 
@@ -44,24 +42,15 @@ class ChatResponse(BaseModel):
     response: str
 
 
-# Globals to cache the compiled graph and track the currently active API key
 _compiled_graph = None
-_active_api_key = None
 
 
-def get_graph(api_key: Optional[str] = None):
-    """
-    Returns the compiled LangGraph workflow.
-    Re-compiles the graph if the API key has changed.
-    """
-    global _compiled_graph, _active_api_key
+def get_graph():
+    """Returns the compiled LangGraph workflow."""
+    global _compiled_graph
 
-    settings = get_settings()
-    current_key = api_key or settings.GEMINI_API_KEY
-
-    if _compiled_graph is None or current_key != _active_api_key:
-        _compiled_graph = get_agent_graph(api_key=api_key)
-        _active_api_key = current_key
+    if _compiled_graph is None:
+        _compiled_graph = get_agent_graph()
 
     return _compiled_graph
 
@@ -78,14 +67,10 @@ async def health():
 
 
 @app.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest, x_gemini_api_key: Optional[str] = Header(None)):
-    """
-    Process a chat message using the LangGraph agent.
-    If the X-Gemini-API-Key header is provided, it overrides the server key.
-    """
+async def chat(request: ChatRequest):
+    """Process a chat message using the LangGraph agent."""
     try:
-        # Get graph, passing the custom API key if provided
-        graph = get_graph(x_gemini_api_key)
+        graph = get_graph()
 
         # Invoke agent with the user message and session id
         config = {"configurable": {"thread_id": request.session_id}}

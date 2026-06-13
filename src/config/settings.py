@@ -13,11 +13,12 @@ class Settings(BaseSettings):
 
     API_URL: str = "http://localhost:8000"
 
-    # Gemini API Key
+    # Gemini
     GEMINI_API_KEY: str | None = Field(
         default=None,
         validation_alias=AliasChoices("GEMINI_API_KEY", "GOOGLE_API_KEY"),
     )
+    GEMINI_MODEL: str = "gemini-2.5-flash"
 
     # ChromaDB
     CHROMA_DB_PATH: str = "./.chroma_db"

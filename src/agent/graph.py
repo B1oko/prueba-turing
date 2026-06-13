@@ -12,24 +12,21 @@ from src.tools.card_search_tool import search_cards
 from src.tools.card_image_tool import get_card_image, create_custom_card
 
 
-def get_agent_graph(api_key: str | None = None):
+def get_agent_graph():
     """
     Initializes the Gemini LLM, binds tools, defines nodes/edges,
     and returns the compiled LangGraph workflow.
     """
     settings = get_settings()
-    resolved_api_key = api_key or settings.GEMINI_API_KEY
-    if not resolved_api_key:
+    if not settings.GEMINI_API_KEY:
         raise ValueError(
             "GEMINI_API_KEY or GOOGLE_API_KEY environment variable is required."
         )
 
-    # Initialize the Gemini chat model
-    # We use gemini-2.0-flash as it's the recommended model for general tasks and supports tool calling
     llm = ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash",
+        model=settings.GEMINI_MODEL,
         temperature=0.1,
-        google_api_key=resolved_api_key,
+        google_api_key=settings.GEMINI_API_KEY,
     )
 
     # Bundle tools
