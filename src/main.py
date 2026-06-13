@@ -5,21 +5,27 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 
 from src.agent.graph import get_agent_graph
 from src.api import chat, health
-from src.config.settings import get_settings
 from src.clients import MTGClient
-from src.tools import CreateCustomCardTool, SearchCardsTool, SearchRulesTool, SearchSetsTool
+from src.config.settings import get_settings
+from src.tools import (
+    CreateCustomCardTool,
+    SearchCardsTool,
+    SearchRulesTool,
+    SearchSetsTool,
+)
 from src.ui.router import setup_ui
 
 logger = logging.getLogger(__name__)
 
+settings = get_settings()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    settings = get_settings()
     if settings.LANGSMITH_TRACING and settings.LANGSMITH_API_KEY:
         os.environ["LANGSMITH_TRACING"] = "true"
         os.environ["LANGSMITH_API_KEY"] = settings.LANGSMITH_API_KEY
@@ -49,8 +55,6 @@ async def lifespan(app: FastAPI):
     logger.info("Agent graph ready")
     yield
 
-
-settings = get_settings()
 
 app = FastAPI(
     title="MTG Chatbot API",

@@ -1,4 +1,4 @@
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 
 from src.config.settings import get_settings
 
@@ -14,8 +14,5 @@ def get_vectorstore(db_path: str | None = None, collection_name: str | None = No
     collection_name = collection_name or settings.CHROMA_COLLECTION_NAME
     # By omitting the embedding_function argument, LangChain's Chroma wrapper
     # automatically falls back to the default local ONNX MiniLM embedding function.
-    vectorstore = Chroma(
-        collection_name=collection_name,
-        persist_directory=db_path
-    )
+    vectorstore = Chroma(collection_name=collection_name, persist_directory=db_path)
     return vectorstore
