@@ -7,6 +7,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from langchain_chroma import Chroma
 
+from google import genai
+
+from src.agent.card_generator_graph import get_card_generator_graph
 from src.agent.graph import get_agent_graph
 from src.api import chat, health
 from src.clients import MTGClient
@@ -45,11 +48,13 @@ async def lifespan(app: FastAPI):
     logger.info("Vectorstore ready")
 
     mtg_client = MTGClient()
+    imagen_client = genai.Client(api_key=settings.GEMINI_API_KEY)
+    card_graph = get_card_generator_graph(imagen_client)
     tools = [
         SearchRulesTool(vectorstore=vectorstore),
         SearchCardsTool(client=mtg_client),
         SearchSetsTool(client=mtg_client),
-        CreateCustomCardTool(),
+        CreateCustomCardTool(graph=card_graph),
     ]
     app.state.graph = get_agent_graph(tools)
     logger.info("Agent graph ready")
