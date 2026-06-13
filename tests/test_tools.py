@@ -47,8 +47,13 @@ async def test_search_cards():
     assert '"toughness": "2"' in artifact
 
 def test_create_custom_card():
-    mock_agent = MagicMock()
-    mock_agent.run.return_value = {
+    mock_llm = MagicMock()
+    mock_image_client = MagicMock()
+    
+    tool = CreateCustomCardTool(llm=mock_llm, image_client=mock_image_client)
+    
+    mock_graph = MagicMock()
+    mock_graph.invoke.return_value = {
         "card_specs": {
             "name": "Test Hero",
             "mana_cost": "{1}{R}{W}",
@@ -60,9 +65,10 @@ def test_create_custom_card():
         },
         "card_path": "custom_cards/test_hero.png"
     }
+    tool._graph = mock_graph
 
-    tool = CreateCustomCardTool(agent=mock_agent)
     result = tool._run(description="Create a test hero")
 
     assert "Test Hero" in result
     assert "custom_cards/test_hero.png" in result
+    mock_graph.invoke.assert_called_once()

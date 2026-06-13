@@ -1,8 +1,11 @@
 import json
+import logging
 from typing import Any
 
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel, PrivateAttr
+
+logger = logging.getLogger(__name__)
 
 
 class _SearchRulesInput(BaseModel):
@@ -48,8 +51,11 @@ class SearchRulesTool(BaseTool):
         raise NotImplementedError("Use async via _arun")
 
     async def _arun(self, query: str) -> str:
+        logger.info("SearchRulesTool invoked with query: '%s'", query)
         try:
             results = await self._vectorstore.asimilarity_search(query, k=5)
+            logger.info("SearchRulesTool found %d matching rules.", len(results))
             return self._format(results)
         except Exception as e:
+            logger.error("SearchRulesTool similarity search failed: %s", str(e), exc_info=True)
             return json.dumps({"error": f"Error searching rules database: {str(e)}"})

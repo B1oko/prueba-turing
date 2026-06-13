@@ -1,7 +1,10 @@
 import re
 import fitz
+import logging
 from typing import List
 from langchain_core.documents import Document
+
+logger = logging.getLogger(__name__)
 
 
 def parse_mtg_rules_pdf(pdf_path: str) -> List[Document]:
@@ -9,7 +12,10 @@ def parse_mtg_rules_pdf(pdf_path: str) -> List[Document]:
     Parses the MTG Comprehensive Rules PDF and returns a list of Document objects.
     Each document corresponds to a single rule or section header with metadata (rule_id, page, source).
     """
+    logger.info("Opening PDF file: '%s'", pdf_path)
     doc = fitz.open(pdf_path)
+    total_pages = len(doc)
+    logger.info("PDF opened successfully. Total pages: %d", total_pages)
     documents = []
 
     # Regex to detect start of a rule/section
@@ -28,7 +34,9 @@ def parse_mtg_rules_pdf(pdf_path: str) -> List[Document]:
     current_rule_text_lines = []
     current_rule_start_page = 0
 
-    for page_num in range(len(doc)):
+    for page_num in range(total_pages):
+        if (page_num + 1) % 100 == 0 or page_num == 0 or page_num == total_pages - 1:
+            logger.info("Parsing page %d/%d...", page_num + 1, total_pages)
         page_text = doc[page_num].get_text("text")
         lines = page_text.split("\n")
 
@@ -80,4 +88,5 @@ def parse_mtg_rules_pdf(pdf_path: str) -> List[Document]:
             )
         )
 
+    logger.info("Parsing complete. Extracted %d rule documents.", len(documents))
     return documents

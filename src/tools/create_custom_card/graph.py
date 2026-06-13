@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 from langchain_core.language_models import BaseChatModel
@@ -6,7 +7,10 @@ from pydantic import BaseModel
 from typing_extensions import TypedDict
 
 from src.clients.image_generation import ImageGenerationClient
+from src.repositories.custom_card_repository import CustomCardRepository
 from src.services.card_renderer import render_card
+
+logger = logging.getLogger(__name__)
 
 
 class CardSpecs(BaseModel):
@@ -41,28 +45,45 @@ Be creative and ensure the card is balanced and thematic. Follow these rules:
 """
 
 
-def get_card_generator_graph(llm: BaseChatModel, image_client: ImageGenerationClient):
+def get_card_generator_graph(
+    llm: BaseChatModel,
+    image_client: ImageGenerationClient,
+    repository: CustomCardRepository,
+):
+    logger.info("Initializing card generator graph...")
     designer_llm = llm.with_structured_output(CardSpecs)
 
     def design_card(state: CardGeneratorState) -> dict:
-        prompt = _DESIGNER_PROMPT.format(description=state["description"])
-        specs: CardSpecs = designer_llm.invoke(prompt)
+        desc = state["description"]
+        logger.info("Node 'design_card' started for description: '%s'", desc)
+        specs: CardSpecs = designer_llm.invoke(_DESIGNER_PROMPT.format(description=desc))
+        logger.info("Node 'design_card' finished. Card name: '%s'", specs.name)
         return {"card_specs": specs.model_dump()}
 
     def generate_art(state: CardGeneratorState) -> dict:
-        art_bytes = image_client.generate(state["card_specs"]["art_prompt"])
+        art_prompt = state["card_specs"]["art_prompt"]
+        logger.info("Node 'generate_art' started.")
+        art_bytes = image_client.generate(art_prompt)
+        if art_bytes:
+            logger.info("Node 'generate_art' got %d bytes.", len(art_bytes))
+        else:
+            logger.warning("Node 'generate_art' returned no bytes, using placeholder.")
         return {"art_bytes": art_bytes}
 
-    def render_card_node(state: CardGeneratorState) -> dict:
-        filepath = render_card(state["card_specs"], state.get("art_bytes"))
-        return {"card_path": filepath}
+    def render_and_save(state: CardGeneratorState) -> dict:
+        specs = state["card_specs"]
+        logger.info("Node 'render_and_save' started for card: '%s'", specs.get("name"))
+        image_bytes = render_card(specs, state.get("art_bytes"))
+        card = repository.save(specs, image_bytes)
+        logger.info("Node 'render_and_save' finished. Card saved at: '%s'", card.image_url)
+        return {"card_path": card.image_url}
 
     workflow = StateGraph(CardGeneratorState)
     workflow.add_node("design_card", design_card)
     workflow.add_node("generate_art", generate_art)
-    workflow.add_node("render_card", render_card_node)
+    workflow.add_node("render_and_save", render_and_save)
     workflow.add_edge(START, "design_card")
     workflow.add_edge("design_card", "generate_art")
-    workflow.add_edge("generate_art", "render_card")
-    workflow.add_edge("render_card", END)
+    workflow.add_edge("generate_art", "render_and_save")
+    workflow.add_edge("render_and_save", END)
     return workflow.compile()

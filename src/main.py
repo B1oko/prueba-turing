@@ -2,14 +2,10 @@ from contextlib import asynccontextmanager
 import logging
 import os
 
+from src.config.logging_config import setup_logging
+
 # Configure global logging at startup
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.StreamHandler(),
-    ]
-)
+setup_logging()
 logger = logging.getLogger(__name__)
 
 from fastapi import FastAPI
@@ -20,9 +16,9 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 
 from src.agent.graph import get_agent_graph
 from src.api import chat, health, custom_cards
-from src.clients import MTGClient
+from src.clients import MTGClient, ImagenGenerationClient
 from src.config.settings import get_settings
-from src.clients import ImagenGenerationClient
+from src.repositories import LocalCustomCardRepository
 from src.tools import (
     CreateCustomCardTool,
     SearchCardsTool,
@@ -66,12 +62,16 @@ async def lifespan(app: FastAPI):
         google_api_key=settings.GEMINI_API_KEY,
     )
 
+    logger.info("Initializing card repository...")
+    card_repository = LocalCustomCardRepository()
+    app.state.card_repository = card_repository
+
     logger.info("Initializing tools...")
     tools = [
         SearchRulesTool(vectorstore=vectorstore),
         SearchCardsTool(client=mtg_client),
         SearchSetsTool(client=mtg_client),
-        CreateCustomCardTool(llm=main_llm, image_client=imagen_client),
+        CreateCustomCardTool(llm=main_llm, image_client=imagen_client, repository=card_repository),
     ]
     logger.info("Initializing agent graph...")
     app.state.graph = get_agent_graph(llm=main_llm, tools=tools)

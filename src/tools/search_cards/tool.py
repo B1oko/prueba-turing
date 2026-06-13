@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import Any, Optional
 
 from langchain_core.tools import BaseTool
@@ -6,6 +7,8 @@ from pydantic import BaseModel, Field, PrivateAttr
 
 from src.clients.mtg_client import ICardSearch, MTGCard
 from src.models.card import Card
+
+logger = logging.getLogger(__name__)
 
 
 class _SearchCardsInput(BaseModel):
@@ -129,7 +132,12 @@ class SearchCardsTool(BaseTool):
         cmc: Optional[int] = None,
         text: Optional[str] = None,
     ) -> tuple[str, str]:
+        logger.info(
+            "SearchCardsTool invoked with filters -> name: %s, colors: %s, types: %s, subtypes: %s, supertypes: %s, cmc: %s, text: %s",
+            name, colors, types, subtypes, supertypes, cmc, text
+        )
         if err := self._validate_filters(name, colors, types, subtypes, supertypes, cmc, text):
+            logger.warning("SearchCardsTool validation failed: %s", err)
             return err, json.dumps({"cards": []})
         try:
             cards = await self._client.search_cards(
@@ -141,7 +149,9 @@ class SearchCardsTool(BaseTool):
                 cmc=cmc,
                 text=text,
             )
+            logger.info("SearchCardsTool found %d cards.", len(cards))
         except Exception as e:
             error_msg = f"Error connecting to MTG API: {e}"
+            logger.error("SearchCardsTool MTG API search failed: %s", str(e), exc_info=True)
             return error_msg, json.dumps({"cards": []})
         return self._to_summary(cards), self._to_artifact(cards)

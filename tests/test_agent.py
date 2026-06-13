@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
 from langchain_core.messages import AIMessage, HumanMessage
-from src.agent.mtg_agent import MTGAgent
+from src.agent.graph import get_agent_graph
 
 def test_agent_graph_execution():
     # Setup mock LLM
@@ -16,12 +16,12 @@ def test_agent_graph_execution():
         content="¡Hola! Soy tu asistente de Magic. ¿En qué te puedo ayudar hoy?"
     )
     
-    # Instantiate MTGAgent with mock LLM and empty tools list
-    agent = MTGAgent(llm=mock_llm, tools=[])
+    # Get agent graph with mock LLM and empty tools list
+    graph = get_agent_graph(llm=mock_llm, tools=[])
         
     # Execute graph with a user message
     config = {"configurable": {"thread_id": "test_thread"}}
-    result = agent.invoke(
+    result = graph.invoke(
         {"messages": [HumanMessage(content="Hola")]},
         config=config
     )
