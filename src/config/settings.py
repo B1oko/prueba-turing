@@ -15,8 +15,7 @@ class Settings(BaseSettings):
     SERVE_FRONTEND: bool = True
 
     # Gemini
-    GEMINI_API_KEY: str | None = Field(
-        default=None,
+    GEMINI_API_KEY: str = Field(
         validation_alias=AliasChoices("GEMINI_API_KEY", "GOOGLE_API_KEY"),
     )
     GEMINI_MODEL: str = "gemini-2.5-flash"

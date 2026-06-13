@@ -17,15 +17,10 @@ class CreateCustomCardTool(BaseTool):
         "Returns the file path of the generated card."
     )
     args_schema: type[BaseModel] = _CreateCustomCardInput
-    graph: Any
+    agent: Any
 
     def _run(self, description: str) -> str:
-        result = self.graph.invoke({
-            "description": description,
-            "card_specs": {},
-            "art_bytes": None,
-            "card_path": "",
-        })
+        result = self.agent.run(description)
         return f"Custom card '{result['card_specs'].get('name', '')}' created at: {result['card_path']}"
 
     async def _arun(self, description: str) -> str:

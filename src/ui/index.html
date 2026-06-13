@@ -1,39 +1,45 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Asistente de Inteligencia Artificial experto en Magic: The Gathering. Consulta cartas en tiempo real y resuelve dudas del reglamento oficial de forma offline.">
-  <link rel="icon" type="image/svg+xml" href="https://svgsilh.com/svg/309783.svg">
-  <title>🧙‍♂️ MTG Call Center - Asistente de Reglas</title>
+  <meta name="description"
+    content="Asistente de Inteligencia Artificial experto en Magic: The Gathering. Consulta cartas en tiempo real y resuelve dudas del reglamento oficial de forma offline.">
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d4af37' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M 6 13 L 12 3 L 18 13 Z' fill='rgba(212, 175, 55, 0.25)' stroke='%23d4af37' stroke-width='2'/%3E%3Cpath d='M 3 13 L 21 13' stroke='%23d4af37' stroke-width='2'/%3E%3Cpath d='M 8 13 V 15 C 8 17, 16 17, 16 15 V 13' stroke='%23d4af37' stroke-width='1.5'/%3E%3Cpath d='M 8 15 C 8 20, 12 22, 12 22 C 12 22, 16 20, 16 15 Z' fill='rgba(255, 255, 255, 0.15)' stroke='%23ffe082' stroke-width='1.5'/%3E%3Ccircle cx='10.5' cy='14.5' r='1' fill='%23ffe082' stroke='none'/%3E%3Ccircle cx='13.5' cy='14.5' r='1' fill='%23ffe082' stroke='none'/%3E%3C/svg%3E">
+  <title>El Grimorio del Planeswalker</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
+
 <body>
   <div class="app-container theme-mana-u" id="appContainer">
-    
+
     <!-- Sidebar -->
     <aside class="app-sidebar">
       <div class="sidebar-brand">
         <div class="brand-icon-wrapper">
-          <svg class="brand-icon-magic" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <!-- Outer magic circle -->
-            <circle cx="50" cy="50" r="45" stroke-dasharray="6 3" stroke-width="1.5" />
-            <!-- Inner magic circle -->
-            <circle cx="50" cy="50" r="35" stroke-width="1" />
-            <!-- Octagram / Star -->
-            <path d="M 50 10 L 62 38 L 90 50 L 62 62 L 50 90 L 38 62 L 10 50 L 38 38 Z" stroke-width="2" />
-            <!-- Central magic core -->
-            <circle cx="50" cy="50" r="10" fill="currentColor" opacity="0.3" />
-            <circle cx="50" cy="50" r="4" fill="currentColor" />
-            <!-- Tiny surrounding runes/sparks -->
-            <line x1="50" y1="2" x2="50" y2="8" stroke-width="1.5" />
-            <line x1="50" y1="92" x2="50" y2="98" stroke-width="1.5" />
-            <line x1="2" y1="50" x2="8" y2="50" stroke-width="1.5" />
-            <line x1="92" y1="50" x2="98" y2="50" stroke-width="1.5" />
+          <svg class="brand-icon-wizard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <!-- Hat cone -->
+            <path d="M 6 13 L 12 3 L 18 13 Z" fill="rgba(212, 175, 55, 0.2)" stroke="#d4af37" stroke-width="1.5" />
+            <!-- Hat brim -->
+            <path d="M 3 13 L 21 13" stroke="#d4af37" stroke-width="1.8" />
+            <!-- Face/Head -->
+            <path d="M 8 13 V 15 C 8 17, 16 17, 16 15 V 13" stroke="#d4af37" stroke-width="1.5" />
+            <!-- Beard -->
+            <path d="M 8 15 C 8 20, 12 22, 12 22 C 12 22, 16 20, 16 15 Z" fill="rgba(255, 255, 255, 0.15)"
+              stroke="#ffe082" stroke-width="1.5" />
+            <!-- Eyes -->
+            <circle cx="10.5" cy="14.5" r="0.8" fill="#ffe082" />
+            <circle cx="13.5" cy="14.5" r="0.8" fill="#ffe082" />
+            <!-- Star sparks around the hat -->
+            <path d="M 4 8 L 4.5 8.5 L 4 9 L 3.5 8.5 Z" fill="#ffe082" stroke="#ffe082" stroke-width="0.5" />
+            <path d="M 20 8 L 20.5 8.5 L 20 9 L 19.5 8.5 Z" fill="#ffe082" stroke="#ffe082" stroke-width="0.5" />
           </svg>
         </div>
         <div class="brand-text">
-          <h2 class="magic-title">MTG Call Center</h2>
+          <h2 class="magic-title">El Grimorio del Planeswalker</h2>
         </div>
       </div>
 
@@ -41,7 +47,8 @@
 
       <div class="sidebar-actions">
         <button class="btn btn-reset" id="resetBtn" title="Comenzar una nueva conversación limpia">
-          <svg class="btn-svg-icon inline-reset-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg class="btn-svg-icon inline-reset-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
             <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
           </svg>
           Resetear Conversación
@@ -78,37 +85,44 @@
       </div>
 
       <div class="sidebar-footer">
-        <p>made with <svg class="footer-heart-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> by <a href="https://github.com/B1oko" target="_blank" rel="noopener noreferrer" class="footer-link">B1oko</a></p>
+        <p>made with <svg class="footer-heart-svg" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+          </svg> by <a href="https://github.com/B1oko" target="_blank" rel="noopener noreferrer"
+            class="footer-link">B1oko</a></p>
       </div>
     </aside>
 
     <!-- Chat Area -->
     <section class="app-chat-area">
       <div class="chat-messages-container" id="chatMessages">
-        
+
         <!-- Welcome Screen -->
         <div class="chat-welcome-container" id="welcomeScreen">
           <div class="welcome-avatar-wrapper">
-            <svg class="welcome-avatar-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <!-- Hat cone -->
-              <path d="M 6 13 L 12 3 L 18 13 Z" fill="rgba(212, 175, 55, 0.2)" stroke="#d4af37" stroke-width="1.5" />
-              <!-- Hat brim -->
-              <path d="M 3 13 L 21 13" stroke="#d4af37" stroke-width="1.8" />
-              <!-- Face/Head -->
-              <path d="M 8 13 V 15 C 8 17, 16 17, 16 15 V 13" stroke="#d4af37" stroke-width="1.5" />
-              <!-- Beard -->
-              <path d="M 8 15 C 8 20, 12 22, 12 22 C 12 22, 16 20, 16 15 Z" fill="rgba(255, 255, 255, 0.15)" stroke="#ffe082" stroke-width="1.5" />
-              <!-- Eyes -->
-              <circle cx="10.5" cy="14.5" r="0.8" fill="#ffe082" />
-              <circle cx="13.5" cy="14.5" r="0.8" fill="#ffe082" />
-              <!-- Star sparks around the hat -->
-              <path d="M 4 8 L 4.5 8.5 L 4 9 L 3.5 8.5 Z" fill="#ffe082" stroke="#ffe082" stroke-width="0.5" />
-              <path d="M 20 8 L 20.5 8.5 L 20 9 L 19.5 8.5 Z" fill="#ffe082" stroke="#ffe082" stroke-width="0.5" />
+            <svg class="welcome-avatar-sigil" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <!-- Outer magic circle -->
+              <circle cx="50" cy="50" r="45" stroke-dasharray="6 3" stroke-width="1.5" />
+              <!-- Inner magic circle -->
+              <circle cx="50" cy="50" r="35" stroke-width="1" />
+              <!-- Octagram / Star -->
+              <path d="M 50 10 L 62 38 L 90 50 L 62 62 L 50 90 L 38 62 L 10 50 L 38 38 Z" stroke-width="2" />
+              <!-- Central magic core -->
+              <circle cx="50" cy="50" r="10" fill="currentColor" opacity="0.3" />
+              <circle cx="50" cy="50" r="4" fill="currentColor" />
+              <!-- Tiny surrounding runes/sparks -->
+              <line x1="50" y1="2" x2="50" y2="8" stroke-width="1.5" />
+              <line x1="50" y1="92" x2="50" y2="98" stroke-width="1.5" />
+              <line x1="2" y1="50" x2="8" y2="50" stroke-width="1.5" />
+              <line x1="92" y1="50" x2="98" y2="50" stroke-width="1.5" />
             </svg>
           </div>
           <h2>¡Saludos, Planeswalker!</h2>
           <p>
-            Soy tu asistente experto en **Magic: The Gathering**. Puedo ayudarte a resolver dudas complejas de reglas (consultando el reglamento oficial offline), buscar cartas en tiempo real o diseñar cartas personalizadas (ej. <em>crea una carta custom...</em>).
+            Soy tu asistente experto en <b>Magic: The Gathering</b>. Puedo ayudarte a resolver dudas complejas de reglas
+            (consultando el reglamento oficial offline), buscar cartas en tiempo real o diseñar cartas personalizadas
+            (ej. <em>crea una carta custom...</em>).
           </p>
           <div class="suggested-prompts">
             <button class="suggested-prompt-btn" data-prompt="¿Cómo funciona la habilidad de Arrollar (Trample)?">
@@ -125,7 +139,8 @@
               </svg>
               Buscar Black Lotus
             </button>
-            <button class="suggested-prompt-btn" data-prompt="Crea una carta custom llamada Fénix de Ceniza con coste 2RR, tipo Criatura Fénix, fuerza 4, resistencia 3, con Volar, Prisa y 'Al morir vuelve a tu mano'.">
+            <button class="suggested-prompt-btn"
+              data-prompt="Crea una carta custom llamada Fénix de Ceniza con coste 2RR, tipo Criatura Fénix, fuerza 4, resistencia 3, con Volar, Prisa y 'Al morir vuelve a tu mano'.">
               <svg class="btn-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M18 2l4 4M2 22l14-14M16 3l1 1M12 2v2M20 10h2M19 17l1 1M5 5L4 4" />
               </svg>
@@ -138,11 +153,13 @@
 
       <!-- Input Form -->
       <form class="chat-input-form" id="chatForm">
-        <input type="text" class="chat-input" id="chatInput" placeholder="Escribe tu duda sobre reglas o cartas..." autocomplete="off">
+        <input type="text" class="chat-input" id="chatInput" placeholder="Escribe tu duda sobre reglas o cartas..."
+          autocomplete="off">
         <button type="submit" class="chat-send-btn" id="sendBtn" disabled>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="send-icon">
-            <line x1="22" y1="2" x2="11" y2="13"/>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+            stroke-linejoin="round" class="send-icon">
+            <line x1="22" y1="2" x2="11" y2="13" />
+            <polygon points="22 2 15 22 11 13 2 9 22 2" />
           </svg>
         </button>
       </form>
@@ -151,11 +168,11 @@
     <!-- Card Inspector (Modal Popup) -->
     <div class="app-card-inspector" id="cardInspector">
       <button class="btn-close-inspector" id="closeInspectorBtn" title="Cerrar Inspector">✕</button>
-      
+
       <div class="inspector-content" id="inspectorContent">
         <!-- Selected Card Details (Hidden by default) -->
         <div class="card-details-view" id="cardDetailsView" style="display: none;">
-          
+
           <div class="inspector-card-container">
             <div class="interactive-3d-card" id="interactiveCard">
               <div class="card-shine-foil"></div>
@@ -198,4 +215,5 @@
 
   <script type="module" src="/static/js/main.js"></script>
 </body>
+
 </html>

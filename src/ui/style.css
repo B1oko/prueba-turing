@@ -87,7 +87,7 @@ h1, h2, h3, h4, h5, h6 {
 /* --- Layout Structure --- */
 .app-container {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: 320px 1fr;
   height: 100vh;
   width: 100vw;
   overflow: hidden;
@@ -123,24 +123,22 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .brand-icon-wrapper {
-  background: linear-gradient(135deg, rgba(20, 13, 36, 0.9), rgba(212, 175, 55, 0.2));
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 56px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--theme-accent-glow), 0 0 10px rgba(212, 175, 55, 0.2);
-  transition: box-shadow 0.3s ease, background 0.3s ease;
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
-.brand-icon-magic {
-  width: 28px;
-  height: 28px;
+.brand-icon-wizard {
+  width: 52px;
+  height: 52px;
   color: #d4af37;
-  filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.6));
-  animation: magicPulse 4s infinite linear;
+  filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.85));
+  animation: floatAvatar 3.5s ease-in-out infinite;
 }
 
 @keyframes magicPulse {
@@ -1481,14 +1479,14 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 50%;
   box-shadow: 0 0 20px rgba(124, 58, 237, 0.2);
   border: 1px solid rgba(212, 175, 55, 0.25);
-  animation: floatAvatar 3.5s ease-in-out infinite;
 }
 
-.welcome-avatar-svg {
+.welcome-avatar-sigil {
   width: 48px;
   height: 48px;
   color: #d4af37;
   filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.5));
+  animation: magicPulse 5s infinite linear;
 }
 
 /* Message Avatars */

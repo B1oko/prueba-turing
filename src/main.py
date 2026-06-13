@@ -6,14 +6,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from langchain_chroma import Chroma
+from langchain_google_genai import ChatGoogleGenerativeAI
 
-from google import genai
-
-from src.agent.card_generator_graph import get_card_generator_graph
-from src.agent.graph import get_agent_graph
+from src.agent.card_generator_agent import CardGeneratorAgent
+from src.agent.mtg_agent import MTGAgent
 from src.api import chat, health
 from src.clients import MTGClient
 from src.config.settings import get_settings
+from src.clients import ImagenGenerationClient
 from src.tools import (
     CreateCustomCardTool,
     SearchCardsTool,
@@ -45,18 +45,32 @@ async def lifespan(app: FastAPI):
         collection_name=settings.CHROMA_COLLECTION_NAME,
         persist_directory=settings.CHROMA_DB_PATH,
     )
-    logger.info("Vectorstore ready")
 
+    logger.info("Initializing MTG client...")
     mtg_client = MTGClient()
-    imagen_client = genai.Client(api_key=settings.GEMINI_API_KEY)
-    card_graph = get_card_generator_graph(imagen_client)
+
+    logger.info("Initializing imagen generation client...")
+    imagen_client = ImagenGenerationClient(api_key=settings.GEMINI_API_KEY)
+
+    logger.info("Initializing main LLM...")
+    main_llm = ChatGoogleGenerativeAI(
+        model=settings.GEMINI_MODEL,
+        temperature=settings.GEMINI_TEMPERATURE,
+        google_api_key=settings.GEMINI_API_KEY,
+    )
+
+    logger.info("Initializing card generator agent...")
+    card_generator_agent = CardGeneratorAgent(llm=main_llm, image_client=imagen_client)
+
+    logger.info("Initializing tools...")
     tools = [
         SearchRulesTool(vectorstore=vectorstore),
         SearchCardsTool(client=mtg_client),
         SearchSetsTool(client=mtg_client),
-        CreateCustomCardTool(graph=card_graph),
+        CreateCustomCardTool(agent=card_generator_agent),
     ]
-    app.state.graph = get_agent_graph(tools)
+    logger.info("Initializing agent graph...")
+    app.state.graph = MTGAgent(llm=main_llm, tools=tools)
     logger.info("Agent graph ready")
     yield
 
@@ -72,7 +86,6 @@ custom_cards_dir = "custom_cards"
 if not os.path.exists(custom_cards_dir):
     os.makedirs(custom_cards_dir)
 app.mount("/custom_cards", StaticFiles(directory=custom_cards_dir), name="custom_cards")
-
 
 if settings.SERVE_FRONTEND:
     setup_ui(app)
