@@ -1,9 +1,26 @@
 import { subscribe, setSelectedCard } from '../state.js';
 import { renderManaCost } from '../utils/manaRenderer.js';
 
+const RARITY_COLORS = {
+  "Common": "#a0a0a0",
+  "Uncommon": "#7ec8e3",
+  "Rare": "#d4af37",
+  "Mythic Rare": "#e87a2a",
+  "Special": "#b784a7",
+  "Basic Land": "#6aab69",
+};
+
+const COLOR_SYMBOLS = {
+  W: { symbol: "☀️", label: "White" },
+  U: { symbol: "💧", label: "Blue" },
+  B: { symbol: "💀", label: "Black" },
+  R: { symbol: "🔥", label: "Red" },
+  G: { symbol: "🌲", label: "Green" },
+};
+
 let appContainer;
 let cardDetailsView, interactiveCard, closeInspectorBtn;
-let cardNameVal, cardManaVal, cardTypeVal, cardRulesVal, cardPtVal;
+let cardNameVal, cardManaVal, cardTypeVal, cardRulesVal, cardPtVal, cardRarityVal, cardFlavorVal, cardMetaVal;
 
 /**
  * Renderiza los detalles de la carta seleccionada en el inspector modal.
@@ -24,11 +41,48 @@ function renderSelectedCard(card) {
 
   cardDetailsView.style.display = "flex";
 
-  // Rellenar datos
+  // Datos principales
   cardNameVal.innerText = card.name;
   cardManaVal.innerHTML = card.mana_cost ? renderManaCost(card.mana_cost) : "Sin Coste";
   cardTypeVal.innerText = card.type || "Desconocido";
   cardRulesVal.innerText = card.text || "Esta carta no tiene texto de reglas.";
+
+  // Flavor text
+  if (cardFlavorVal) {
+    if (card.flavor) {
+      cardFlavorVal.innerText = card.flavor;
+      cardFlavorVal.style.display = "block";
+    } else {
+      cardFlavorVal.style.display = "none";
+    }
+  }
+
+  // Rareza
+  if (cardRarityVal) {
+    if (card.rarity) {
+      cardRarityVal.innerText = card.rarity;
+      cardRarityVal.style.color = RARITY_COLORS[card.rarity] || "#ccc";
+      cardRarityVal.style.display = "inline-block";
+    } else {
+      cardRarityVal.style.display = "none";
+    }
+  }
+
+  // Meta: colores + set
+  if (cardMetaVal) {
+    const parts = [];
+    if (card.colors && card.colors.length > 0) {
+      const colorIcons = card.colors
+        .map(c => COLOR_SYMBOLS[c] ? `${COLOR_SYMBOLS[c].symbol}` : c)
+        .join(" ");
+      parts.push(colorIcons);
+    }
+    if (card.set) {
+      parts.push(`Set: ${card.set.toUpperCase()}`);
+    }
+    cardMetaVal.innerText = parts.join("  ·  ");
+    cardMetaVal.style.display = parts.length ? "block" : "none";
+  }
 
   // Fuerza y Resistencia (P/T)
   if (card.power && card.toughness) {
@@ -97,6 +151,9 @@ export function initCardInspector() {
   cardTypeVal = document.getElementById("cardTypeVal");
   cardRulesVal = document.getElementById("cardRulesVal");
   cardPtVal = document.getElementById("cardPtVal");
+  cardRarityVal = document.getElementById("cardRarityVal");
+  cardFlavorVal = document.getElementById("cardFlavorVal");
+  cardMetaVal = document.getElementById("cardMetaVal");
 
   if (!interactiveCard) return;
 

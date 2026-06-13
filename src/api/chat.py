@@ -5,18 +5,10 @@ from fastapi import APIRouter, HTTPException, Request
 from langchain_core.messages import HumanMessage, ToolMessage
 from pydantic import BaseModel
 
+from src.models import Card
+
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
-
-class CardData(BaseModel):
-    name: str
-    mana_cost: str = ""
-    type: str = ""
-    text: str = ""
-    power: str | None = None
-    toughness: str | None = None
-    image_url: str | None = None
 
 
 class ChatRequest(BaseModel):
@@ -32,18 +24,19 @@ class RuleGrounding(BaseModel):
 
 class ChatResponse(BaseModel):
     response: str
-    cards: list[CardData] | None = None
+    cards: list[Card] | None = None
     rules: list[RuleGrounding] | None = None
 
 
-def _extract_cards(messages: list) -> list[CardData] | None:
+def _extract_cards(messages: list) -> list[Card] | None:
     cards = []
     for msg in messages:
         if isinstance(msg, ToolMessage) and msg.name == "search_cards":
             try:
-                data = json.loads(msg.content)
+                raw = msg.artifact if msg.artifact is not None else msg.content
+                data = json.loads(raw)
                 for card in data.get("cards", []):
-                    cards.append(CardData(**card))
+                    cards.append(Card(**card))
             except (json.JSONDecodeError, TypeError):
                 pass
     return cards if cards else None

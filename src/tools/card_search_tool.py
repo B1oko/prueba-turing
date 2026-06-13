@@ -4,7 +4,8 @@ from typing import Any, Optional
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel, PrivateAttr
 
-from src.clients.mtg_client import ICardSearch
+from src.clients.mtg_client import ICardSearch, MTGCard
+from src.models import Card
 
 
 class _SearchCardsInput(BaseModel):
@@ -23,6 +24,7 @@ class SearchCardsTool(BaseTool):
         "cmc (converted mana cost as integer), text (rules text or keywords)."
     )
     args_schema: type[BaseModel] = _SearchCardsInput
+    response_format: str = "content_and_artifact"
 
     _client: Any = PrivateAttr()
 
@@ -30,33 +32,45 @@ class SearchCardsTool(BaseTool):
         super().__init__(**kwargs)
         self._client = client
 
-    def _format(self, cards: list[dict]) -> str:
-        if not cards:
-            return json.dumps(
-                {
-                    "cards": [],
-                    "message": "No cards found matching the specified criteria.",
-                }
-            )
-        seen_names: set = set()
+    def _to_artifact(self, cards: list[MTGCard]) -> str:
+        seen: set[str] = set()
         result = []
         for card in cards:
-            card_name = card.get("name", "Unknown")
-            if card_name in seen_names:
+            if card.name in seen:
                 continue
-            seen_names.add(card_name)
-            entry = {
-                "name": card_name,
-                "mana_cost": card.get("manaCost", ""),
-                "type": card.get("type", "Unknown"),
-                "text": card.get("text", ""),
-                "image_url": card.get("imageUrl"),
-            }
-            if card.get("power") and card.get("toughness"):
-                entry["power"] = card["power"]
-                entry["toughness"] = card["toughness"]
-            result.append(entry)
+            seen.add(card.name)
+            result.append(Card(
+                name=card.name,
+                mana_cost=card.manaCost or "",
+                type=card.type,
+                text=card.text or "",
+                image_url=card.imageUrl,
+                power=card.power,
+                toughness=card.toughness,
+                rarity=card.rarity,
+                flavor=card.flavor,
+                colors=card.colors,
+                set=card.set,
+            ).model_dump())
         return json.dumps({"cards": result})
+
+    def _to_summary(self, cards: list[MTGCard]) -> str:
+        if not cards:
+            return "No cards found matching the criteria."
+        lines = []
+        for card in cards:
+            parts = [f"**{card.name}**"]
+            if card.manaCost:
+                parts.append(card.manaCost)
+            if card.type:
+                parts.append(f"— {card.type}")
+            if card.text:
+                snippet = card.text[:120] + ("..." if len(card.text) > 120 else "")
+                parts.append(f"| {snippet}")
+            if card.power and card.toughness:
+                parts.append(f"({card.power}/{card.toughness})")
+            lines.append(" ".join(parts))
+        return f"Cards found ({len(cards)}):\n" + "\n".join(f"- {l}" for l in lines)
 
     def _validate_filters(self, name, colors, type, cmc, text) -> Optional[str]:
         if not any([name, colors, type, cmc is not None, text]):
@@ -75,13 +89,14 @@ class SearchCardsTool(BaseTool):
         type: Optional[str] = None,
         cmc: Optional[int] = None,
         text: Optional[str] = None,
-    ) -> str:
+    ) -> tuple[str, str]:
         if err := self._validate_filters(name, colors, type, cmc, text):
-            return err
+            return err, json.dumps({"cards": []})
         try:
             cards = await self._client.search_cards(
                 name=name, colors=colors, type=type, cmc=cmc, text=text
             )
         except Exception as e:
-            return json.dumps({"error": f"Error connecting to MTG API: {e}"})
-        return self._format(cards)
+            error_msg = f"Error connecting to MTG API: {e}"
+            return error_msg, json.dumps({"cards": []})
+        return self._to_summary(cards), self._to_artifact(cards)
