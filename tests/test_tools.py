@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 from src.tools.rules_tool import search_rules
 from src.tools.card_search_tool import search_cards
-from src.tools.card_image_tool import get_card_image, create_custom_card
+from src.tools.card_custom_tool import create_custom_card
 
 # 1. Test rules search tool (mocking vectorstore)
 @patch("src.tools.rules_tool.get_vectorstore")
@@ -22,8 +22,8 @@ def test_search_rules(mock_get_vs):
     result = search_rules.invoke({"query": "What is Magic?"})
     
     # Verify results
-    assert "Rule 100.1" in result
-    assert "Page 1" in result
+    assert "100.1" in result
+    assert '"page": 1' in result
     assert "Magic is a game." in result
     mock_vs.similarity_search.assert_called_once_with("What is Magic?", k=5)
 
@@ -62,28 +62,7 @@ def test_search_cards(mock_get):
     assert '"toughness": "2"' in result
 
 
-# 3. Test card image retrieval (mocking requests.get)
-@patch("src.tools.card_image_tool.requests.get")
-def test_get_card_image(mock_get):
-    mock_resp = MagicMock()
-    mock_resp.status_code = 200
-    mock_resp.json.return_value = {
-        "cards": [
-            {
-                "name": "Black Lotus",
-                "imageUrl": "http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=600&type=card"
-            }
-        ]
-    }
-    mock_get.return_value = mock_resp
-    
-    # Run tool using .invoke()
-    result = get_card_image.invoke({"card_name": "Black Lotus"})
-    assert "Black Lotus" in result
-    assert "http://gatherer.wizards.com/Handlers/Image.ashx" in result
-
-
-# 4. Test custom card generator (Integration test with Pillow)
+# 3. Test custom card generator (Integration test with Pillow)
 def test_create_custom_card():
     card_name = "Test Hero"
     # Execute card drawing using .invoke()

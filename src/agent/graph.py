@@ -9,7 +9,7 @@ from src.agent.state import AgentState
 from src.agent.prompts import SYSTEM_PROMPT
 from src.tools.rules_tool import search_rules
 from src.tools.card_search_tool import search_cards
-from src.tools.card_image_tool import get_card_image, create_custom_card
+from src.tools.card_custom_tool import create_custom_card
 
 
 def get_agent_graph():
@@ -30,7 +30,7 @@ def get_agent_graph():
     )
 
     # Bundle tools
-    tools = [search_rules, search_cards, get_card_image, create_custom_card]
+    tools = [search_rules, search_cards, create_custom_card]
     llm_with_tools = llm.bind_tools(tools)
 
     # Define agent node

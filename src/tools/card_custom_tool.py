@@ -1,51 +1,7 @@
 import os
-import requests
 from typing import Optional, List
 from PIL import Image, ImageDraw, ImageFont
 from langchain_core.tools import tool
-
-# Simple cache for card image search
-_image_cache = {}
-
-@tool
-def get_card_image(card_name: str) -> str:
-    """
-    Retrieves the image URL of a Magic: The Gathering card by its exact name.
-    
-    Args:
-        card_name: The name of the card (e.g., 'Black Lotus', 'Battlefield Raptor').
-        
-    Returns:
-        The URL of the card's image, or a message indicating no image was found.
-    """
-    if card_name in _image_cache:
-        return _image_cache[card_name]
-        
-    base_url = "https://api.magicthegathering.io/v1/cards"
-    params = {"name": card_name, "pageSize": "1"}
-    
-    try:
-        response = requests.get(base_url, params=params, timeout=10)
-        response.raise_for_status()
-        cards = response.json().get("cards", [])
-        
-        if not cards:
-            return f"Card '{card_name}' not found."
-            
-        # Find first card print that has an image URL
-        image_url = None
-        for card in cards:
-            if card.get("imageUrl"):
-                image_url = card.get("imageUrl")
-                break
-                
-        if image_url:
-            _image_cache[card_name] = image_url
-            return f"Image URL for {card_name}: {image_url}"
-        else:
-            return f"Card '{card_name}' found, but no image URL is available in the database."
-    except Exception as e:
-        return f"Error retrieving card image: {str(e)}"
 
 
 @tool
