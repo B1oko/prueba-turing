@@ -1,4 +1,5 @@
 import os
+import json
 from langchain_core.tools import tool
 from ingestion.vectorstore import get_vectorstore
 
@@ -21,7 +22,7 @@ def search_rules(query: str) -> str:
         query: The search query (e.g., 'first strike', 'combat damage step', 'tap for mana').
         
     Returns:
-        A formatted string of the top matching rules with rule IDs and page numbers.
+        A JSON string with the top matching rules with rule IDs, page numbers, and texts.
     """
     try:
         db = _get_db()
@@ -29,15 +30,19 @@ def search_rules(query: str) -> str:
         results = db.similarity_search(query, k=5)
         
         if not results:
-            return "No matching rules found in the Comprehensive Rules."
+            return json.dumps({"rules": [], "message": "No matching rules found in the Comprehensive Rules."})
             
-        formatted_results = []
+        rules = []
         for doc in results:
             rule_id = doc.metadata.get("rule_id", "Unknown")
             page = doc.metadata.get("page", "Unknown")
             content = doc.page_content
-            formatted_results.append(f"--- Rule {rule_id} (Page {page}) ---\n{content}")
+            rules.append({
+                "rule_id": str(rule_id),
+                "page": int(page) if str(page).isdigit() else 0,
+                "text": content
+            })
             
-        return "\n\n".join(formatted_results)
+        return json.dumps({"rules": rules})
     except Exception as e:
-        return f"Error searching rules database: {str(e)}"
+        return json.dumps({"error": f"Error searching rules database: {str(e)}"})

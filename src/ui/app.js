@@ -334,6 +334,12 @@ function parseInlineStyling(text) {
   // Custom card image preview path highlight
   parsed = parsed.replace(/(custom_cards\/[a-zA-Z0-9_-]+\.png)/gi, '<span class="inline-card-preview-link">🖼️ $1</span>');
   
+  // Rule citations inline linking (e.g. Rule 100.1a (Page 2) or Regla 510.4 (Página 87))
+  const ruleRegex = /(Rule|Regla)\s+([0-9a-zA-Z.]+)\s+\((Page|P&aacute;gina|Página)\s+(\d+)\)/gi;
+  parsed = parsed.replace(ruleRegex, (match, word, ruleId, pageWord, pageNum) => {
+    return `<a href="/rules.pdf#page=${pageNum}" target="_blank" class="rule-link-inline" title="Ver reglamento: ${word} ${ruleId} (Pág. ${pageNum})">${match}</a>`;
+  });
+  
   return parsed;
 }
 
@@ -385,7 +391,8 @@ async function sendMessage(text) {
         id: crypto.randomUUID(),
         role: "assistant",
         content: data.response,
-        cards: data.cards || []
+        cards: data.cards || [],
+        rules: data.rules || []
       };
       
       chatHistory.push(assistantMsg);
@@ -504,6 +511,39 @@ function appendMessageElement(msg) {
     });
     
     wrapper.appendChild(cardsGrid);
+  }
+
+  // Render rules grounding tags under the assistant message bubble if rules exist
+  if (msg.role === "assistant" && msg.rules && msg.rules.length > 0) {
+    const groundingDiv = document.createElement("div");
+    groundingDiv.className = "message-rules-grounding";
+    
+    const titleSpan = document.createElement("span");
+    titleSpan.className = "grounding-title";
+    titleSpan.innerHTML = "📖 Reglas citadas:";
+    groundingDiv.appendChild(titleSpan);
+    
+    const tagsDiv = document.createElement("div");
+    tagsDiv.className = "grounding-tags";
+    
+    msg.rules.forEach(rule => {
+      const badge = document.createElement("a");
+      badge.href = `/rules.pdf#page=${rule.page}`;
+      badge.target = "_blank";
+      badge.className = "rule-badge";
+      badge.innerText = `Regla ${rule.rule_id} (Pág. ${rule.page})`;
+      
+      // Clean up rules text for tooltip
+      const tooltipText = rule.text
+        .replace(/"/g, "&quot;")
+        .substring(0, 300) + (rule.text.length > 300 ? "..." : "");
+      badge.setAttribute("title", tooltipText);
+      
+      tagsDiv.appendChild(badge);
+    });
+    
+    groundingDiv.appendChild(tagsDiv);
+    wrapper.appendChild(groundingDiv);
   }
   
   row.appendChild(avatar);

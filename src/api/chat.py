@@ -35,9 +35,16 @@ class ChatRequest(BaseModel):
     session_id: str
 
 
+class RuleGrounding(BaseModel):
+    rule_id: str
+    page: int
+    text: str
+
+
 class ChatResponse(BaseModel):
     response: str
     cards: list[CardData] | None = None
+    rules: list[RuleGrounding] | None = None
 
 
 def _extract_cards(messages: list) -> list[CardData] | None:
@@ -54,6 +61,24 @@ def _extract_cards(messages: list) -> list[CardData] | None:
     return cards if cards else None
 
 
+def _extract_rules(messages: list) -> list[RuleGrounding] | None:
+    """Parse rule grounding data from search_rules ToolMessages in the graph result."""
+    rules = []
+    for msg in messages:
+        if isinstance(msg, ToolMessage) and msg.name == "search_rules":
+            try:
+                data = json.loads(msg.content)
+                for rule in data.get("rules", []):
+                    rules.append(RuleGrounding(
+                        rule_id=str(rule.get("rule_id", "Unknown")),
+                        page=int(rule.get("page", 0)),
+                        text=str(rule.get("text", ""))
+                    ))
+            except (json.JSONDecodeError, TypeError):
+                pass
+    return rules if rules else None
+
+
 @router.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     """Process a chat message using the LangGraph agent."""
@@ -65,7 +90,8 @@ async def chat(request: ChatRequest):
         )
         assistant_msg = result["messages"][-1].content
         cards = _extract_cards(result["messages"])
-        return ChatResponse(response=assistant_msg, cards=cards)
+        rules = _extract_rules(result["messages"])
+        return ChatResponse(response=assistant_msg, cards=cards, rules=rules)
     except Exception as e:
         logger.error("Error in /chat endpoint: %s", str(e))
         raise HTTPException(status_code=500, detail=str(e))

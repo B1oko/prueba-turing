@@ -18,3 +18,12 @@ def setup_ui(app: FastAPI) -> None:
         if os.path.exists(index_path):
             return FileResponse(index_path)
         return {"message": "Frontend index.html not found. Please create it under src/ui/index.html."}
+
+    @app.get("/rules.pdf")
+    async def serve_rules():
+        """Serve the official MTG Comprehensive Rules PDF."""
+        root_dir = os.path.dirname(os.path.dirname(ui_dir))
+        pdf_path = os.path.join(root_dir, "data", "MagicCompRules 20260417.pdf")
+        if os.path.exists(pdf_path):
+            return FileResponse(pdf_path, media_type="application/pdf")
+        return {"error": "Rules PDF not found."}
