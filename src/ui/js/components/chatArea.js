@@ -39,8 +39,22 @@ function appendTypingIndicator() {
   row.id = "typingIndicator";
   
   const avatar = document.createElement("div");
-  avatar.className = "message-avatar";
-  avatar.innerText = "🧙‍♂️";
+  avatar.className = "message-avatar assistant-avatar";
+  avatar.innerHTML = `
+    <svg class="avatar-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Hat cone -->
+      <path d="M 6 13 L 12 3 L 18 13 Z" fill="rgba(212, 175, 55, 0.15)" />
+      <!-- Hat brim -->
+      <path d="M 3 13 L 21 13" />
+      <!-- Face/Head -->
+      <path d="M 8 13 V 15 C 8 17, 16 17, 16 15 V 13" />
+      <!-- Beard -->
+      <path d="M 8 15 C 8 20, 12 22, 12 22 C 12 22, 16 20, 16 15 Z" fill="rgba(255, 255, 255, 0.1)" />
+      <!-- Eyes -->
+      <circle cx="10.5" cy="14.5" r="0.7" fill="currentColor" />
+      <circle cx="13.5" cy="14.5" r="0.7" fill="currentColor" />
+    </svg>
+  `;
   
   const wrapper = document.createElement("div");
   wrapper.className = "message-bubble-wrapper";
@@ -96,8 +110,31 @@ function appendMessageElement(msg) {
   row.setAttribute("data-msg-id", msg.id);
   
   const avatar = document.createElement("div");
-  avatar.className = "message-avatar";
-  avatar.innerText = msg.role === "user" ? "👤" : "🧙‍♂️";
+  avatar.className = `message-avatar ${msg.role}-avatar`;
+  if (msg.role === "user") {
+    avatar.innerHTML = `
+      <svg class="avatar-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
+      </svg>
+    `;
+  } else {
+    avatar.innerHTML = `
+      <svg class="avatar-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <!-- Hat cone -->
+        <path d="M 6 13 L 12 3 L 18 13 Z" fill="rgba(212, 175, 55, 0.15)" />
+        <!-- Hat brim -->
+        <path d="M 3 13 L 21 13" />
+        <!-- Face/Head -->
+        <path d="M 8 13 V 15 C 8 17, 16 17, 16 15 V 13" />
+        <!-- Beard -->
+        <path d="M 8 15 C 8 20, 12 22, 12 22 C 12 22, 16 20, 16 15 Z" fill="rgba(255, 255, 255, 0.1)" />
+        <!-- Eyes -->
+        <circle cx="10.5" cy="14.5" r="0.7" fill="currentColor" />
+        <circle cx="13.5" cy="14.5" r="0.7" fill="currentColor" />
+      </svg>
+    `;
+  }
   
   const wrapper = document.createElement("div");
   wrapper.className = "message-bubble-wrapper";
@@ -204,15 +241,49 @@ function renderChatHistory(chatHistory) {
     welcome.className = "chat-welcome-container";
     welcome.id = "welcomeScreen";
     welcome.innerHTML = `
-      <div class="welcome-avatar">🧙‍♂️</div>
+      <div class="welcome-avatar-wrapper">
+        <svg class="welcome-avatar-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <!-- Hat cone -->
+          <path d="M 6 13 L 12 3 L 18 13 Z" fill="rgba(212, 175, 55, 0.2)" stroke="#d4af37" stroke-width="1.5" />
+          <!-- Hat brim -->
+          <path d="M 3 13 L 21 13" stroke="#d4af37" stroke-width="1.8" />
+          <!-- Face/Head -->
+          <path d="M 8 13 V 15 C 8 17, 16 17, 16 15 V 13" stroke="#d4af37" stroke-width="1.5" />
+          <!-- Beard -->
+          <path d="M 8 15 C 8 20, 12 22, 12 22 C 12 22, 16 20, 16 15 Z" fill="rgba(255, 255, 255, 0.15)" stroke="#ffe082" stroke-width="1.5" />
+          <!-- Eyes -->
+          <circle cx="10.5" cy="14.5" r="0.8" fill="#ffe082" />
+          <circle cx="13.5" cy="14.5" r="0.8" fill="#ffe082" />
+          <!-- Star sparks around the hat -->
+          <path d="M 4 8 L 4.5 8.5 L 4 9 L 3.5 8.5 Z" fill="#ffe082" stroke="#ffe082" stroke-width="0.5" />
+          <path d="M 20 8 L 20.5 8.5 L 20 9 L 19.5 8.5 Z" fill="#ffe082" stroke="#ffe082" stroke-width="0.5" />
+        </svg>
+      </div>
       <h2>¡Saludos, Planeswalker!</h2>
       <p>
         Soy tu asistente experto en **Magic: The Gathering**. Puedo ayudarte a resolver dudas complejas de reglas (consultando el reglamento oficial offline), buscar cartas en tiempo real o diseñar cartas personalizadas (ej. <em>crea una carta custom...</em>).
       </p>
       <div class="suggested-prompts">
-        <button class="suggested-prompt-btn" data-prompt="¿Cómo funciona la habilidad de Arrollar (Trample)?">📜 Explicar Arrollar</button>
-        <button class="suggested-prompt-btn" data-prompt="Busca la carta Black Lotus">🔍 Buscar Black Lotus</button>
-        <button class="suggested-prompt-btn" data-prompt="Crea una carta custom llamada Fénix de Ceniza con coste 2RR, tipo Criatura Fénix, fuerza 4, resistencia 3, con Volar, Prisa y 'Al morir vuelve a tu mano'.">🎨 Crear carta customizada</button>
+        <button class="suggested-prompt-btn" data-prompt="¿Cómo funciona la habilidad de Arrollar (Trample)?">
+          <svg class="btn-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+          </svg>
+          Explicar Arrollar
+        </button>
+        <button class="suggested-prompt-btn" data-prompt="Busca la carta Black Lotus">
+          <svg class="btn-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          Buscar Black Lotus
+        </button>
+        <button class="suggested-prompt-btn" data-prompt="Crea una carta custom llamada Fénix de Ceniza con coste 2RR, tipo Criatura Fénix, fuerza 4, resistencia 3, con Volar, Prisa y 'Al morir vuelve a tu mano'.">
+          <svg class="btn-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 2l4 4M2 22l14-14M16 3l1 1M12 2v2M20 10h2M19 17l1 1M5 5L4 4" />
+          </svg>
+          Crear carta customizada
+        </button>
       </div>
     `;
     chatMessages.appendChild(welcome);

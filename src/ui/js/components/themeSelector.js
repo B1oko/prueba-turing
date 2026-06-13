@@ -32,6 +32,9 @@ export function applyManaTheme(mana) {
  * y establece el tema predeterminado inicial ("U").
  */
 export function initThemeSelector() {
+  // Tema inicial por defecto (Azul/Isla)
+  applyManaTheme("U");
+
   manaSelector = document.getElementById("manaSelector");
   if (!manaSelector) return;
 
@@ -42,7 +45,4 @@ export function initThemeSelector() {
     const mana = bubble.getAttribute("data-mana");
     applyManaTheme(mana);
   });
-
-  // Tema inicial por defecto (Azul/Isla)
-  applyManaTheme("U");
 }
