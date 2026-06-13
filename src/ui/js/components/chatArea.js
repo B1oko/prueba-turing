@@ -324,7 +324,7 @@ export async function sendMessage(text) {
         data.cards.forEach(c => addRecentCard({ name: c.name, image_url: c.image_url }));
       } else {
         // Fallback: Si en el texto hay referencias a cartas creadas dinámicamente
-        const customCardRegex = /custom_cards\/[a-zA-Z0-9_-]+\.png/gi;
+        const customCardRegex = /custom_cards\/[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+\.png/gi;
         const matches = data.response.match(customCardRegex);
         if (matches && matches.length > 0) {
           const filename = matches[0].split("/").pop() || "carta_creada.png";

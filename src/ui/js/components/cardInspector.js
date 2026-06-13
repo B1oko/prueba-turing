@@ -21,6 +21,7 @@ const COLOR_SYMBOLS = {
 let appContainer;
 let cardDetailsView, interactiveCard, closeInspectorBtn;
 let cardNameVal, cardManaVal, cardTypeVal, cardRulesVal, cardPtVal, cardRarityVal, cardFlavorVal, cardMetaVal;
+let downloadCardBtn;
 
 /**
  * Renderiza los detalles de la carta seleccionada en el inspector modal.
@@ -129,9 +130,37 @@ function renderSelectedCard(card) {
     interactiveCard.appendChild(frame);
   }
 
+  // Botón de descarga
+  if (downloadCardBtn) {
+    if (card.image_url) {
+      const src = card.image_url.startsWith("http") || card.image_url.startsWith("/")
+        ? card.image_url
+        : "/" + card.image_url;
+      downloadCardBtn.style.display = "flex";
+      downloadCardBtn.onclick = () => downloadCardImage(src, card.name);
+    } else {
+      downloadCardBtn.style.display = "none";
+    }
+  }
+
   // Mostrar el modal agregando la clase al contenedor raíz
   if (appContainer) {
     appContainer.classList.add("inspector-open");
+  }
+}
+
+async function downloadCardImage(src, cardName) {
+  try {
+    const response = await fetch(src);
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = `${cardName.replace(/\s+/g, "_").toLowerCase()}.png`;
+    a.click();
+    URL.revokeObjectURL(blobUrl);
+  } catch {
+    window.open(src, "_blank");
   }
 }
 
@@ -154,6 +183,7 @@ export function initCardInspector() {
   cardRarityVal = document.getElementById("cardRarityVal");
   cardFlavorVal = document.getElementById("cardFlavorVal");
   cardMetaVal = document.getElementById("cardMetaVal");
+  downloadCardBtn = document.getElementById("downloadCardBtn");
 
   if (!interactiveCard) return;
 

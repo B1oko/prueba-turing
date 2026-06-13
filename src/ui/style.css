@@ -1127,14 +1127,21 @@ h1, h2, h3, h4, h5, h6 {
   transform: scale(1);
 }
 
-.btn-close-inspector {
+.inspector-top-actions {
   position: absolute;
   top: 24px;
   right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 10;
+}
+
+.btn-close-inspector,
+.btn-download-card {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-secondary);
-  font-size: 1.1rem;
   cursor: pointer;
   width: 36px;
   height: 36px;
@@ -1143,10 +1150,14 @@ h1, h2, h3, h4, h5, h6 {
   justify-content: center;
   border-radius: 50%;
   transition: all 0.2s ease;
-  z-index: 10;
 }
 
-.btn-close-inspector:hover {
+.btn-close-inspector {
+  font-size: 1.1rem;
+}
+
+.btn-close-inspector:hover,
+.btn-download-card:hover {
   background: rgba(255,255,255,0.15);
   color: var(--text-primary);
   border-color: var(--theme-accent-color);
