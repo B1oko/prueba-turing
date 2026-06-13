@@ -53,11 +53,13 @@ def test_search_cards(mock_get):
     result = search_cards.invoke({"name": "Battlefield Raptor"})
     
     # Verify results
-    assert "Card Name: Battlefield Raptor" in result
-    assert "Mana Cost: {W}" in result
-    assert "Type: Creature - Bird Soldier" in result
-    assert "Rules Text: Flying, first strike" in result
-    assert "P/T: 1/2" in result
+    assert "Battlefield Raptor" in result
+    assert "mana_cost" in result
+    assert "{W}" in result
+    assert "Creature - Bird Soldier" in result
+    assert "Flying, first strike" in result
+    assert '"power": "1"' in result
+    assert '"toughness": "2"' in result
 
 
 # 3. Test card image retrieval (mocking requests.get)

@@ -1,7 +1,8 @@
+import json
 import logging
 
 from fastapi import APIRouter, HTTPException
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, ToolMessage
 from pydantic import BaseModel
 
 from src.agent.graph import get_agent_graph
@@ -19,6 +20,16 @@ def get_graph():
     return _compiled_graph
 
 
+class CardData(BaseModel):
+    name: str
+    mana_cost: str = ""
+    type: str = ""
+    text: str = ""
+    power: str | None = None
+    toughness: str | None = None
+    image_url: str | None = None
+
+
 class ChatRequest(BaseModel):
     message: str
     session_id: str
@@ -26,6 +37,21 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     response: str
+    cards: list[CardData] | None = None
+
+
+def _extract_cards(messages: list) -> list[CardData] | None:
+    """Parse card data from search_cards ToolMessages in the graph result."""
+    cards = []
+    for msg in messages:
+        if isinstance(msg, ToolMessage) and msg.name == "search_cards":
+            try:
+                data = json.loads(msg.content)
+                for card in data.get("cards", []):
+                    cards.append(CardData(**card))
+            except (json.JSONDecodeError, TypeError):
+                pass
+    return cards if cards else None
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -38,7 +64,8 @@ async def chat(request: ChatRequest):
             {"messages": [HumanMessage(content=request.message)]}, config=config
         )
         assistant_msg = result["messages"][-1].content
-        return ChatResponse(response=assistant_msg)
+        cards = _extract_cards(result["messages"])
+        return ChatResponse(response=assistant_msg, cards=cards)
     except Exception as e:
         logger.error("Error in /chat endpoint: %s", str(e))
         raise HTTPException(status_code=500, detail=str(e))

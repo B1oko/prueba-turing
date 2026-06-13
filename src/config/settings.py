@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     )
 
     API_URL: str = "http://localhost:8000"
+    SERVE_FRONTEND: bool = True
 
     # Gemini
     GEMINI_API_KEY: str | None = Field(
