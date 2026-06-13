@@ -1,0 +1,40 @@
+services:
+  api:
+    build: .
+    container_name: mtg_chatbot_api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      # Mount ChromaDB local persistent files to persist database vector state
+      - ./.chroma_db:/app/.chroma_db
+      # Mount custom generated card mockups folder
+      - ./custom_cards:/app/custom_cards
+    command: ["uv", "run", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    restart: unless-stopped
+
+  app:
+    build: .
+    container_name: mtg_chatbot_app
+    ports:
+      - "8501:8501"
+    environment:
+      # Tell the Streamlit app to communicate with the FastAPI service container
+      - API_URL=http://api:8000
+    depends_on:
+      - api
+    volumes:
+      # Mount custom generated card mockups folder so the UI can read generated images
+      - ./custom_cards:/app/custom_cards
+    command: ["uv", "run", "streamlit", "run", "ui/app.py", "--server.address=0.0.0.0", "--server.port=8501"]
+    restart: unless-stopped
+
+  test:
+    build: .
+    container_name: mtg_chatbot_test
+    env_file:
+      - .env
+    # We do not mount the host directory to prevent platform-specific virtualenv conflicts
+    # Command executes pytest suite
+    command: ["uv", "run", "pytest", "tests/"]

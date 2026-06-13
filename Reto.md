@@ -1,14 +1,8 @@
-
-
 Hola Pablo,
 
 Te envío a continuación el reto técnico como te comenté. Creo que no deberías tener problema para tenerlo listo antes del martes 16 de junio. Aunque, en cualquier caso, dímelo si tuvieras cualquier imprevisto o necesitaras más tiempo.
 
-
-
 Necesitaría que me envíes la solución en un repositorio abierto para poder compartirlo. Tienes toda la información a continuación, aunque, para cualquier duda pongo a @Alejandro Ramon, técnico del equipo que será quien revise la prueba.
-
-
 
 No es un reto extenso, pero nos gusta dejar un margen de tiempo para que puedas tener tiempo de calidad para prepararlo 😊
 
@@ -26,16 +20,17 @@ Nota sobre el uso de IA y herramientas de Asistencia En este reto se permite y s
 Vas a construir un asistente que combine múltiples fuentes de información y sea capaz de ir más allá de la búsqueda simple: extraer datos estructurados, usar herramientas externas y mantener el hilo de la conversación.
 
 El foco está en que el código sea limpio, testado y explicado, no en que sea el más sofisticado del mundo.
+
 ### El sistema a construir
 
-Nuestro cliente tiene un call center para resolución de dudas y consejos para el juego de cartas Magic the gathering. Nos pide construir un chatbot para poder automatizar las respuestas a sus clientes. Para ello nos ha dado un reglamento de juego ([data/MagicCompRules 20260417.pdf](./data/MagicCompRules 20260417.pdf)) y una API para poder disponer de imágenes de cartas y nuevos releases (https://docs.magicthegathering.io/).
+Nuestro cliente tiene un call center para resolución de dudas y consejos para el juego de cartas Magic the gathering. Nos pide construir un chatbot para poder automatizar las respuestas a sus clientes. Para ello nos ha dado un reglamento de juego ([MagicCompRules 20260417.pdf](./data/MagicCompRules 20260417.pdf)) y una API para poder disponer de imágenes de cartas y nuevos releases ([https://docs.magicthegathering.io/](https://docs.magicthegathering.io/)).
 
 Se pide un sistema que sea capaz de:
 
-Resolver dudas de reglas básicas del juego (¿Qué fases hay en un turno de juego?, ¿Cómo funciona el mana?, etc.)
-Interacciones entre cartas (Mi rapaz del campo de batalla ha hecho daño con su daña primero, si lo cambio con mi ninja de horas tardías ¿Aplico el daño?)
-Búsqueda de cartas según descripción del usuario (Busco una carta de color blanco de coste inferior a dos de mana que sea guerrero)
-(Bonus) Creación de cartas custom (Quiero una carta de Han solo, blanca-roja que tenga dañar primero)
+- Resolver dudas de reglas básicas del juego (¿Qué fases hay en un turno de juego?, ¿Cómo funciona el mana?, etc.)
+- Interacciones entre cartas (Mi rapaz del campo de batalla ha hecho daño con su daña primero, si lo cambio con mi ninja de horas tardías ¿Aplico el daño?)
+- Búsqueda de cartas según descripción del usuario (Busco una carta de color blanco de coste inferior a dos de mana que sea guerrero)
+- (Bonus) Creación de cartas custom (Quiero una carta de Han solo, blanca-roja que tenga dañar primero)
 
 Se pide:
 
@@ -49,7 +44,7 @@ Alternativas: Si se prefiere hacer otro juego/hobby para tener un mayor conocimi
 
 El siguiente código implementa el pipeline de ingesta y consulta de un compañero. Identifica todos los problemas que encuentres (bugs, seguridad, mantenibilidad, diseño, rendimiento) y propón una versión mejorada razonada.
 
-``` python
+```python
 import openai
 import json
 import chromadb
@@ -123,3 +118,5 @@ code_review.md
 Análisis y mejora del fragmento de código
  
 Comparte el enlace al repositorio antes de la entrevista. Lo revisaremos en detalle durante la misma.
+```
+

@@ -1,0 +1,22 @@
+# Python ignore
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.venv/
+env/
+venv/
+
+# Database and images
+.chroma_db/
+.test_chroma/
+custom_cards/
+
+# Git ignore
+.git/
+.gitignore
+
+# Environment configurations
+.env
+.python-version
