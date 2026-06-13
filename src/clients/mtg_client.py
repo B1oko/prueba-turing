@@ -35,7 +35,9 @@ class ICardSearch(Protocol):
         self,
         name: Optional[str] = None,
         colors: Optional[str] = None,
-        type: Optional[str] = None,
+        types: Optional[str] = None,
+        subtypes: Optional[str] = None,
+        supertypes: Optional[str] = None,
         cmc: Optional[int] = None,
         text: Optional[str] = None,
         page_size: int = 8,
@@ -58,7 +60,9 @@ class MTGClient(ICardSearch, ISetSearch):
         self,
         name: Optional[str] = None,
         colors: Optional[str] = None,
-        type: Optional[str] = None,
+        types: Optional[str] = None,
+        subtypes: Optional[str] = None,
+        supertypes: Optional[str] = None,
         cmc: Optional[int] = None,
         text: Optional[str] = None,
         page_size: int = 8,
@@ -68,13 +72,16 @@ class MTGClient(ICardSearch, ISetSearch):
             params["name"] = name
         if colors:
             params["colors"] = colors
-        if type:
-            params["type"] = type
+        if types:
+            params["types"] = types
+        if subtypes:
+            params["subtypes"] = subtypes
+        if supertypes:
+            params["supertypes"] = supertypes
         if cmc is not None:
             params["cmc"] = str(cmc)
         if text:
             params["text"] = text
-
         url = f"{_BASE_URL}/cards?{urllib.parse.urlencode(params)}"
         response = await self._client.get(url)
         response.raise_for_status()

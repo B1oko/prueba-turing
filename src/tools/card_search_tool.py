@@ -2,26 +2,63 @@ import json
 from typing import Any, Optional
 
 from langchain_core.tools import BaseTool
-from pydantic import BaseModel, PrivateAttr
+from pydantic import BaseModel, Field, PrivateAttr
 
 from src.clients.mtg_client import ICardSearch, MTGCard
-from src.models import Card
+from src.models.card import Card
 
 
 class _SearchCardsInput(BaseModel):
-    name: Optional[str] = None
-    colors: Optional[str] = None
-    type: Optional[str] = None
-    cmc: Optional[int] = None
-    text: Optional[str] = None
+    name: Optional[str] = Field(
+        default=None,
+        description="Card name (partial match).",
+    )
+    colors: Optional[str] = Field(
+        default=None,
+        description=(
+            "Color codes: W (white/blanco), U (blue/azul), B (black/negro), "
+            "R (red/rojo), G (green/verde). "
+            "Comma = AND, pipe = OR. Examples: 'W', 'W,R', 'W|U'."
+        ),
+    )
+    types: Optional[str] = Field(
+        default=None,
+        description=(
+            "Main card type (left of the dash). "
+            "Examples: Creature, Instant, Sorcery, Artifact, Enchantment, Land, Planeswalker."
+        ),
+    )
+    subtypes: Optional[str] = Field(
+        default=None,
+        description=(
+            "Subtype (right of the dash). 'Guerrero' = Warrior. "
+            "Examples: Warrior, Human, Elf, Bird, Equipment, Aura."
+        ),
+    )
+    supertypes: Optional[str] = Field(
+        default=None,
+        description="Supertype. Examples: Legendary, Basic, Snow.",
+    )
+    cmc: Optional[int] = Field(
+        default=None,
+        description=(
+            "Converted mana cost (exact integer). "
+            "'Coste inferior a 2' = use cmc=1 or cmc=0 separately."
+        ),
+    )
+    text: Optional[str] = Field(
+        default=None,
+        description="Keyword or rules text. Examples: 'flying', 'first strike', 'trample'.",
+    )
 
 
 class SearchCardsTool(BaseTool):
     name: str = "search_cards"
     description: str = (
-        "Search for Magic: The Gathering cards using filters. "
-        "Args: name (card name), colors (e.g. 'White,Red'), type (e.g. 'Creature'), "
-        "cmc (converted mana cost as integer), text (rules text or keywords)."
+        "Search for Magic: The Gathering cards using filters aligned with the MTG API. "
+        "Map user intent to: colors (W/U/B/R/G codes), types (Creature, Instant...), "
+        "subtypes (Warrior, Human...), cmc (exact cost) or cmc_max (less than X), "
+        "and text (keywords in rules text)."
     )
     args_schema: type[BaseModel] = _SearchCardsInput
     response_format: str = "content_and_artifact"
@@ -72,8 +109,8 @@ class SearchCardsTool(BaseTool):
             lines.append(" ".join(parts))
         return f"Cards found ({len(cards)}):\n" + "\n".join(f"- {l}" for l in lines)
 
-    def _validate_filters(self, name, colors, type, cmc, text) -> Optional[str]:
-        if not any([name, colors, type, cmc is not None, text]):
+    def _validate_filters(self, name, colors, types, subtypes, supertypes, cmc, text) -> Optional[str]:
+        if not any([name, colors, types, subtypes, supertypes, cmc is not None, text]):
             return json.dumps(
                 {"error": "Please provide at least one filter for the card search."}
             )
@@ -86,15 +123,23 @@ class SearchCardsTool(BaseTool):
         self,
         name: Optional[str] = None,
         colors: Optional[str] = None,
-        type: Optional[str] = None,
+        types: Optional[str] = None,
+        subtypes: Optional[str] = None,
+        supertypes: Optional[str] = None,
         cmc: Optional[int] = None,
         text: Optional[str] = None,
     ) -> tuple[str, str]:
-        if err := self._validate_filters(name, colors, type, cmc, text):
+        if err := self._validate_filters(name, colors, types, subtypes, supertypes, cmc, text):
             return err, json.dumps({"cards": []})
         try:
             cards = await self._client.search_cards(
-                name=name, colors=colors, type=type, cmc=cmc, text=text
+                name=name,
+                colors=colors,
+                types=types,
+                subtypes=subtypes,
+                supertypes=supertypes,
+                cmc=cmc,
+                text=text,
             )
         except Exception as e:
             error_msg = f"Error connecting to MTG API: {e}"
