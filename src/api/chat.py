@@ -28,10 +28,13 @@ class ChatResponse(BaseModel):
     rules: list[RuleGrounding] | None = None
 
 
+_CARD_TOOLS = {"search_cards", "create_custom_card"}
+
+
 def _extract_cards(messages: list) -> list[Card] | None:
     cards = []
     for msg in messages:
-        if isinstance(msg, ToolMessage) and msg.name == "search_cards":
+        if isinstance(msg, ToolMessage) and msg.name in _CARD_TOOLS:
             try:
                 raw = msg.artifact if msg.artifact is not None else msg.content
                 data = json.loads(raw)

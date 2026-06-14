@@ -7,9 +7,6 @@ from src.models.card import Card
 
 logger = logging.getLogger(__name__)
 
-_COLOR_MAP = {"white": "W", "blue": "U", "black": "B", "red": "R", "green": "G"}
-
-
 def _to_filename(name: str) -> str:
     return (
         "".join(x for x in name if x.isalnum() or x in " -_")
@@ -20,7 +17,6 @@ def _to_filename(name: str) -> str:
 
 
 def _specs_to_card(card_specs: dict, image_url: str) -> Card:
-    colors_lower = [c.lower() for c in card_specs.get("colors", [])]
     return Card(
         name=card_specs.get("name", ""),
         mana_cost=card_specs.get("mana_cost", ""),
@@ -31,7 +27,7 @@ def _specs_to_card(card_specs: dict, image_url: str) -> Card:
         toughness=card_specs.get("toughness"),
         rarity="Mythic Rare",
         flavor=card_specs.get("flavor_text", ""),
-        colors=[_COLOR_MAP.get(c, c.upper()) for c in colors_lower],
+        colors=card_specs.get("colors", []),
         set="custom",
     )
 

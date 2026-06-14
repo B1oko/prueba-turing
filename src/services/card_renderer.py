@@ -4,11 +4,11 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 _COLOR_MAP = {
-    "white": (248, 246, 235),
-    "blue": (14, 104, 171),
-    "black": (21, 11, 14),
-    "red": (211, 32, 42),
-    "green": (0, 115, 62),
+    "W": (248, 246, 235),
+    "U": (14, 104, 171),
+    "B": (21, 11, 14),
+    "R": (211, 32, 42),
+    "G": (0, 115, 62),
     "gold": (197, 160, 89),
     "colorless": (170, 170, 170),
 }
@@ -48,11 +48,11 @@ def render_card(card_specs: dict, art_bytes: bytes | None) -> bytes:
     img = Image.new("RGB", (width, height), color=(0, 0, 0))
     draw = ImageDraw.Draw(img)
 
-    colors_lower = [c.lower() for c in card_specs.get("colors", [])]
-    if len(colors_lower) > 1:
+    colors = card_specs.get("colors", [])
+    if len(colors) > 1:
         theme_color = _COLOR_MAP["gold"]
-    elif colors_lower and colors_lower[0] in _COLOR_MAP:
-        theme_color = _COLOR_MAP[colors_lower[0]]
+    elif colors and colors[0] in _COLOR_MAP:
+        theme_color = _COLOR_MAP[colors[0]]
     else:
         theme_color = _COLOR_MAP["colorless"]
 

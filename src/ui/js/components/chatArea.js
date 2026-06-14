@@ -322,30 +322,7 @@ export async function sendMessage(text) {
       // Agregar a las cartas recientes en el panel
       if (data.cards && data.cards.length > 0) {
         data.cards.forEach(c => addRecentCard({ name: c.name, image_url: c.image_url }));
-      } else {
-        // Fallback: Si en el texto hay referencias a cartas creadas dinámicamente
-        const customCardRegex = /custom_cards\/[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+\.png/gi;
-        const matches = data.response.match(customCardRegex);
-        if (matches && matches.length > 0) {
-          const filename = matches[0].split("/").pop() || "carta_creada.png";
-          const cleanName = filename
-            .replace(".png", "")
-            .replace(/[-_]/g, " ")
-            .split(" ")
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(" ");
-
-          const mockCustomCard = {
-            name: cleanName,
-            mana_cost: "Custom",
-            type: "Carta Personalizada",
-            text: "Esta es una carta customizada generada dinámicamente mediante Pillow.",
-            image_url: matches[0]
-          };
-
-          addRecentCard(mockCustomCard);
-          loadCustomCards();
-        }
+        loadCustomCards();
       }
     } else {
       const errorData = await resp.json().catch(() => ({}));

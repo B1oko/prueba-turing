@@ -36,7 +36,7 @@ _DESIGNER_PROMPT = """Design a Magic: The Gathering card based on this descripti
 
 Be creative and ensure the card is balanced and thematic. Follow these rules:
 - mana_cost: use MTG notation like {{W}}, {{1}}{{W}}, {{2}}{{U}}{{U}}, etc.
-- colors: list of lowercase color names (white, blue, black, red, green)
+- colors: list of MTG color codes (W, U, B, R, G)
 - type_line: e.g. "Creature — Human Warrior", "Instant", "Enchantment"
 - rules_text: the card's mechanical text using standard MTG wording
 - flavor_text: a short evocative quote that fits the card's theme

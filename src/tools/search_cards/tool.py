@@ -10,6 +10,8 @@ from src.models.card import Card
 
 logger = logging.getLogger(__name__)
 
+_NAME_TO_CODE = {"White": "W", "Blue": "U", "Black": "B", "Red": "R", "Green": "G"}
+
 
 class _SearchCardsInput(BaseModel):
     name: Optional[str] = Field(
@@ -89,7 +91,7 @@ class SearchCardsTool(BaseTool):
                 toughness=card.toughness,
                 rarity=card.rarity,
                 flavor=card.flavor,
-                colors=card.colors,
+                colors=[_NAME_TO_CODE.get(c, c) for c in (card.colors or [])],
                 set=card.set,
             ).model_dump())
         return json.dumps({"cards": result})
