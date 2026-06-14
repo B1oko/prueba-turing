@@ -31,21 +31,20 @@ Este documento detalla y justifica las decisiones arquitectónicas tomadas para 
   - La API de MTG (`magicthegathering.io`) puede presentar latencias elevadas o cortes esporádicos.
   - La implementación de un diccionario de caché simple a nivel de módulo en las herramientas evita repetir peticiones HTTP idénticas en la misma sesión, mejorando drásticamente el tiempo de respuesta y evitando el *rate-limiting*.
 
-### 1.5 Reestructuración del Proyecto (Desacoplamiento Raíz)
-* **Decisión**: Las utilidades operativas y la interfaz cliente se han sacado de `src/` a la raíz del repositorio:
-  - `ingestion/` en la raíz contiene los scripts de indexación de PDF y ChromaDB.
-  - `ui/` en la raíz contiene la aplicación cliente web de Streamlit, tratada como un paquete externo e independiente.
-  - `src/` contiene única y exclusivamente el backend: el entrypoint de la API REST (`main.py` en FastAPI), la lógica del agente LangGraph (`agent/`) y las herramientas de tarjetas y reglamento (`tools/`).
+### 1.5 Frontend: SPA Estática integrada en FastAPI (en lugar de Streamlit)
+* **Decisión**: La interfaz web es una SPA estática (HTML + CSS + JS vanilla) ubicada en `src/ui/` y servida directamente por FastAPI mediante `StaticFiles` cuando `SERVE_FRONTEND=True`.
 * **Justificación**:
-  - Al separar el cliente web (`ui/`) del servidor de consultas (`src/`), logramos un desacoplamiento de arquitectura clásico (Frontend-Backend).
-  - Limpia el código de producción de la API backend de dependencias visuales e independiza la ejecución de scripts manuales (`ingestion/`).
+  - **Eliminación de dependencia pesada**: Streamlit añade ~30 dependencias transitivas, fuerza un proceso Python separado y expone un puerto adicional (8501). La SPA estática elimina todo eso: cero dependencias de frontend en `pyproject.toml`.
+  - **Proceso único y despliegue simplificado**: API y UI conviven en el mismo proceso FastAPI en el puerto `8000`, lo que reduce la complejidad operativa tanto en local como en Docker (un solo contenedor, un solo servicio).
+  - **Separación de responsabilidades sin fricción de proceso**: El código de frontend (JS/CSS/HTML) vive en `src/ui/` separado del código Python del backend, pero sin requerir un servidor dedicado. En producción podría extraerse fácilmente a un CDN o un contenedor nginx independiente.
+  - **Scripts de ingesta independientes**: `ingestion/` permanece en la raíz del repositorio, desacoplado del paquete `src/` que constituye la aplicación desplegable.
 
 ### 1.6 Contenerización con Docker y Docker Compose
-* **Decisión**: Creación de un `Dockerfile` optimizado con `uv` y un archivo `docker-compose.yml` que corre la API y la UI en contenedores independientes.
+* **Decisión**: Un `Dockerfile` único con `uv` empaqueta la API FastAPI (backend + frontend estático). `docker-compose.yml` define dos servicios: `api` (la aplicación) y `test` (batería de pruebas aislada).
 * **Justificación**:
-  - **Aislamiento y Portabilidad**: Asegura que cualquier desarrollador pueda arrancar la demo de Streamlit o correr la batería de pruebas en cualquier sistema operativo sin lidiar con diferencias en las versiones de librerías nativas (como PyMuPDF o SQLite para ChromaDB).
-  - **Gestión con Volúmenes**: Mapear la base de datos de vectores `.chroma_db` permite ejecutar la ingesta localmente (ahorrando procesamiento en contenedores efímeros) y que el contenedor de la API la lea de forma persistente inmediatamente.
-  - **Evitar conflictos de montaje**: No se montan volúmenes en el contenedor de pruebas (`test`) para evitar conflictos de arquitectura (ej. I/O Errors de Windows vs Linux al leer/remover directorios `.venv/` virtuales locales).
+  - **Aislamiento y portabilidad**: Garantiza reproducibilidad en cualquier sistema operativo sin depender de la versión local de Python ni de librerías nativas como PyMuPDF o SQLite.
+  - **Volúmenes para persistencia**: `.chroma_db` y `custom_cards/` se montan como volúmenes en `api`, permitiendo ejecutar la ingesta en local y que el contenedor lea la base vectorial inmediatamente sin reconstruir la imagen.
+  - **Servicio de test aislado**: El servicio `test` no monta el directorio host para evitar conflictos de arquitectura entre entornos virtuales Windows y el sistema de ficheros Linux del contenedor.
 
 ---
 

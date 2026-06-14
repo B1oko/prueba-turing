@@ -62,16 +62,12 @@ http://127.0.0.1:8000/
 
 ## Ejecutar con Docker
 
+Ejecuta la ingesta en local antes de construir la imagen. Luego:
+
 ```bash
-docker compose up api
+docker build -t mtg-chatbot .
+docker run --rm -p 8000:8000 --env-file .env -v ./.chroma_db:/app/.chroma_db -v ./custom_cards:/app/custom_cards mtg-chatbot
 ```
-
-El compose expone:
-
-- `8000:8000`
-- `8501:8000`
-
-Ambos puertos apuntan al mismo servicio FastAPI.
 
 ## Tests
 

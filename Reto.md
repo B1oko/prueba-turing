@@ -90,33 +90,16 @@ def ask(question: str, history: list) -> str:
     answer = resp["choices"][0]["message"]["content"]
     history.append((question, answer))
     open("history.json", "w").write(json.dumps(history))
-    return answer```
-Entrega: Fichero code_review.md con tu análisis y el código mejorado.
-Entregables
-Entregable
-	
-Descripción
-
-
-Repositorio Git
-	
-Código con historial de commits visible
-
-
-README.md
-	
-Instrucciones de instalación, configuración y ejemplos
-
-
-decisions.md
-	
-Documento de Decisiones Técnicas (DDT)
-
-
-code_review.md
-	
-Análisis y mejora del fragmento de código
- 
-Comparte el enlace al repositorio antes de la entrevista. Lo revisaremos en detalle durante la misma.
+    return answer
 ```
 
+Entrega: Fichero code_review.md con tu análisis y el código mejorado.
+
+## Entregables
+
+- [ ] Repositorio Git: Código con historial de commits visible
+- [ ] README.md: Instrucciones de instalación, configuración y ejemplos
+- [ ] decisions.md: Documento de Decisiones Técnicas (DDT)
+- [ ] code_review.md: Análisis y mejora del fragmento de código
+
+Comparte el enlace al repositorio antes de la entrevista. Lo revisaremos en detalle durante la misma.
