@@ -10,6 +10,8 @@ RUN uv sync --frozen --no-install-project
 
 COPY . .
 
+RUN uv run python -m ingestion.run_ingestion
+
 EXPOSE 8000
 
 CMD ["uv", "run", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]

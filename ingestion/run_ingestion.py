@@ -1,54 +1,68 @@
+import logging
 import os
 import shutil
 import sys
-import logging
-from pdf_parser import parse_mtg_rules_pdf
-from vectorstore import get_vectorstore
 
-# Config logging
+from ingestion.pdf_parser import parse_mtg_rules_pdf
+from ingestion.vectorstore import get_vectorstore
 from src.config.logging_config import setup_logging
+from src.config.settings import get_settings
+
 setup_logging()
 logger = logging.getLogger(__name__)
 
+_PDF_PATH = os.path.join("data", "MagicCompRules 20260417.pdf")
+_BATCH_SIZE = 200
+
+
 def main():
-    pdf_path = os.path.join("data", "MagicCompRules 20260417.pdf")
-    db_path = "./.chroma_db"
-    collection_name = "mtg_rules"
-    
-    if not os.path.exists(pdf_path):
-        logger.error(f"Rules PDF not found at {pdf_path}. Please place the PDF file there.")
+    settings = get_settings()
+
+    if not os.path.exists(_PDF_PATH):
+        logger.error(
+            "Rules PDF not found at %s. Please place the PDF file there.", _PDF_PATH
+        )
         sys.exit(1)
-        
-    logger.info("Cleaning up existing vector store to start fresh...")
-    if os.path.exists(db_path):
+
+    if os.path.exists(settings.CHROMA_DB_PATH):
         try:
-            shutil.rmtree(db_path)
-            logger.info(f"Deleted old database directory: {db_path}")
+            shutil.rmtree(settings.CHROMA_DB_PATH)
+            logger.info("Deleted old database directory: %s", settings.CHROMA_DB_PATH)
         except Exception as e:
-            logger.warning(f"Could not delete {db_path} directory: {e}. Attempting to proceed.")
+            logger.warning(
+                "Could not delete %s: %s. Attempting to proceed.",
+                settings.CHROMA_DB_PATH,
+                e,
+            )
 
     logger.info("Parsing rules PDF...")
-    documents = parse_mtg_rules_pdf(pdf_path)
-    logger.info(f"Successfully parsed {len(documents)} rule documents.")
-    
+    documents = parse_mtg_rules_pdf(_PDF_PATH)
+    logger.info("Successfully parsed %d rule documents.", len(documents))
+
     logger.info("Initializing vector store...")
-    vectorstore = get_vectorstore(db_path=db_path, collection_name=collection_name)
-    
-    # Batch add documents to avoid rate limits/timeouts
-    batch_size = 200
+    vectorstore = get_vectorstore()
     total_docs = len(documents)
-    
-    logger.info(f"Adding documents to ChromaDB in batches of {batch_size}...")
-    for i in range(0, total_docs, batch_size):
-        batch = documents[i:i + batch_size]
-        logger.info(f"Ingesting batch {i//batch_size + 1}/{(total_docs-1)//batch_size + 1} (docs {i} to {min(i+batch_size, total_docs)})...")
+
+    logger.info(
+        "Adding %d documents to ChromaDB in batches of %d...", total_docs, _BATCH_SIZE
+    )
+    for i in range(0, total_docs, _BATCH_SIZE):
+        batch = documents[i : i + _BATCH_SIZE]
+        logger.info(
+            "Ingesting batch %d/%d (docs %d to %d)...",
+            i // _BATCH_SIZE + 1,
+            (total_docs - 1) // _BATCH_SIZE + 1,
+            i,
+            min(i + _BATCH_SIZE, total_docs),
+        )
         try:
             vectorstore.add_documents(batch)
         except Exception as e:
-            logger.error(f"Failed to ingest batch starting at index {i}: {e}")
+            logger.error("Failed to ingest batch starting at index %d: %s", i, e)
             sys.exit(1)
-            
-    logger.info("Ingestion complete! MTG Rules Vector Store is now populated.")
+
+    logger.info("Ingestion complete. MTG Rules Vector Store is now populated.")
+
 
 if __name__ == "__main__":
     main()

@@ -133,7 +133,19 @@ El agente principal llama a `create_custom_card` como una herramienta más; inte
 
 ### 2.8 Estrategia de Chunking del PDF
 
-> *Sección pendiente de completar. Se detallará la estrategia de segmentación del reglamento (tamaño de chunk, solapamiento, metadatos por regla) en una revisión futura.*
+**Decisión:** Chunk = regla individual del reglamento, delimitada por su identificador oficial.
+
+El parser (`ingestion/pdf_parser.py`) extrae el texto del PDF con PyMuPDF y usa una expresión regular para detectar el inicio de cada regla:
+
+| Patrón | Ejemplo | Tipo |
+|---|---|---|
+| `\d{3}\.\d+[a-z]?` | `100.1`, `100.1a` | Regla concreta |
+| `\d{3}\.` | `100.` | Sección |
+| `\d\.` | `1.` | Capítulo |
+
+Cada regla se almacena como un `Document` de LangChain con metadatos `rule_id` y `page`. No hay solapamiento entre chunks.
+
+**Motivo:** El reglamento de MTG ya está estructurado en unidades semánticas discretas (cada regla es autocontenida). Usar el límite natural de cada regla como chunk evita partir una regla por la mitad y permite al agente citar el número de regla exacto (`rule_id`) y la página en sus respuestas, lo que era un requisito explícito del sistema.
 
 ---
 

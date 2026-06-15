@@ -48,7 +48,7 @@ uv sync
 ### 2. Ejecutar la ingesta de reglas
 
 ```bash
-uv run python ingestion/run_ingestion.py
+uv run python -m ingestion.run_ingestion
 ```
 
 ### 3. Levantar la API
@@ -101,3 +101,4 @@ La carpeta `docs/` contiene documentación detallada del proyecto:
 - [`docs/diagramas.md`](docs/diagramas.md): Diagramas Mermaid de flujo, componentes y clases.
 - [`docs/api.md`](docs/api.md): Endpoints HTTP, contratos de entrada/salida y errores.
 - [`docs/operacion.md`](docs/operacion.md): Configuración, ejecución, ingesta y datos persistidos.
+- [`docs/pipeline.md`](docs/pipeline.md): Funcionamiento detallado de la pipeline de ingesta del reglamento.
