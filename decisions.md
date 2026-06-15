@@ -1,105 +1,195 @@
-# Documento de Decisiones Técnicas (DDT) - Chatbot MTG
+# Documento de Decisiones Técnicas (DDT)
 
-Este documento detalla y justifica las decisiones arquitectónicas tomadas para la solución demo del asistente conversacional de Magic: The Gathering (MTG), así como la propuesta para una arquitectura completa productiva.
-
----
-
-## 1. Decisiones Arquitectónicas del Prototipo (Demo)
-
-### 1.1 Orquestación: LangGraph vs LangChain AgentExecutor
-* **Decisión**: Se ha implementado **LangGraph** para modelar el agente mediante un grafo de estados cíclico.
-* **Justificación**:
-  - Los agentes tradicionales de caja negra (`AgentExecutor`) suelen entrar en bucles infinitos o llamar a herramientas de forma desordenada en dominios complejos.
-  - Para resolver dudas de interacciones en MTG, el agente debe seguir una secuencia estricta: primero extraer nombres de cartas, luego buscar *ambas* cartas en la API, después buscar las reglas asociadas y finalmente responder. 
-  - LangGraph permite definir este flujo de control explícito, persistir el estado de la conversación de manera nativa mediante checkpointers (`MemorySaver`) y facilitar la depuración de trazas.
-
-### 1.2 Base de Datos Vectorial: ChromaDB con Embeddings Locales (ONNX)
-* **Decisión**: Se ha utilizado **ChromaDB** persistente localmente con embeddings locales **all-MiniLM-L6-v2** a través de ONNX.
-* **Justificación**:
-  - **Eficiencia de Coste y Límites**: Indexar secuencialmente más de 3,500 reglas individuales en la API de Google Gemini (o cualquier otro proveedor) consume gran parte de la cuota gratuita de embeddings, genera costes y corre el riesgo de suspender la API Key (como ocurrió con la clave proporcionada).
-  - **Latencia y Autonomía**: Los embeddings basados en ONNX se ejecutan en local sobre CPU a una velocidad extremadamente alta (~10 ms por búsqueda) y no requieren llamadas a APIs externas ni claves de acceso, garantizando que el sistema de RAG de reglas funcione de manera 100% offline y gratuita.
-
-### 1.3 Segmentación del PDF (Chunking Estratégico)
-* **Decisión**: En lugar de usar divisores de caracteres ciegos (`RecursiveCharacterTextSplitter`), se ha implementado un **parseador personalizado** en base a expresiones regulares.
-* **Justificación**:
-  - El reglamento oficial de MTG está altamente estructurado en secciones jerárquicas (ej. `104.3a`, `104.3b`).
-  - Un splitter tradicional rompe las reglas por la mitad o mezcla párrafos inconexos. Nuestro parseador segmenta el texto exactamente en cada inicio de regla numerada y guarda el ID de la regla y la página real como metadatos en ChromaDB. Esto permite al LLM citar de forma exacta la fuente de su razonamiento (ej. "según la regla 105.2a (página 12)...").
-
-### 1.4 API de MTG y Estrategia de Caching
-* **Decisión**: Conexión directa con la API oficial sin autenticación y almacenamiento de respuestas en un caché en memoria.
-* **Justificación**:
-  - La API de MTG (`magicthegathering.io`) puede presentar latencias elevadas o cortes esporádicos.
-  - La implementación de un diccionario de caché simple a nivel de módulo en las herramientas evita repetir peticiones HTTP idénticas en la misma sesión, mejorando drásticamente el tiempo de respuesta y evitando el *rate-limiting*.
-
-### 1.5 Frontend: SPA Estática integrada en FastAPI (en lugar de Streamlit)
-* **Decisión**: La interfaz web es una SPA estática (HTML + CSS + JS vanilla) ubicada en `src/ui/` y servida directamente por FastAPI mediante `StaticFiles` cuando `SERVE_FRONTEND=True`.
-* **Justificación**:
-  - **Eliminación de dependencia pesada**: Streamlit añade ~30 dependencias transitivas, fuerza un proceso Python separado y expone un puerto adicional (8501). La SPA estática elimina todo eso: cero dependencias de frontend en `pyproject.toml`.
-  - **Proceso único y despliegue simplificado**: API y UI conviven en el mismo proceso FastAPI en el puerto `8000`, lo que reduce la complejidad operativa tanto en local como en Docker (un solo contenedor, un solo servicio).
-  - **Separación de responsabilidades sin fricción de proceso**: El código de frontend (JS/CSS/HTML) vive en `src/ui/` separado del código Python del backend, pero sin requerir un servidor dedicado. En producción podría extraerse fácilmente a un CDN o un contenedor nginx independiente.
-  - **Scripts de ingesta independientes**: `ingestion/` permanece en la raíz del repositorio, desacoplado del paquete `src/` que constituye la aplicación desplegable.
-
-### 1.6 Contenerización con Docker y Docker Compose
-* **Decisión**: Un `Dockerfile` único con `uv` empaqueta la API FastAPI (backend + frontend estático). `docker-compose.yml` define dos servicios: `api` (la aplicación) y `test` (batería de pruebas aislada).
-* **Justificación**:
-  - **Aislamiento y portabilidad**: Garantiza reproducibilidad en cualquier sistema operativo sin depender de la versión local de Python ni de librerías nativas como PyMuPDF o SQLite.
-  - **Volúmenes para persistencia**: `.chroma_db` y `custom_cards/` se montan como volúmenes en `api`, permitiendo ejecutar la ingesta en local y que el contenedor lea la base vectorial inmediatamente sin reconstruir la imagen.
-  - **Servicio de test aislado**: El servicio `test` no monta el directorio host para evitar conflictos de arquitectura entre entornos virtuales Windows y el sistema de ficheros Linux del contenedor.
+## MTG Chatbot - Prueba Técnica
 
 ---
 
-## 2. Arquitectura de Producción Propuesta
+## 1. Visión General
 
-Para escalar este sistema a producción, dar servicio a miles de usuarios concurrentes en múltiples canales (WhatsApp, Web, Teléfono) y garantizar fiabilidad, se propone la siguiente arquitectura:
+El sistema es un chatbot para un call center de Magic: The Gathering capaz de:
+
+- Resolver dudas de reglas consultando el reglamento oficial (RAG sobre PDF)
+- Explicar interacciones entre cartas combinando búsqueda en API y reglas
+- Buscar cartas por características mediante la API pública de MTG
+- Generar cartas custom con arte generado por IA (bonus)
+
+La arquitectura de demo consiste en un único servicio FastAPI que expone la API del agente y, opcionalmente, sirve un frontend estático.
+
+---
+
+## 2. Decisiones Técnicas
+
+### 2.1 LLM - Gemini 2.5 Flash
+
+**Decisión:** Google Gemini 2.5 Flash como modelo principal.
+
+**Motivos:**
+
+- Créditos de Google Cloud disponibles, lo que eliminaba coste adicional para la demo.
+- Familiaridad previa con la API de Google Generative AI.
+- Gemini 2.5 Flash ofrece una ventana de contexto amplia y buena velocidad de respuesta, adecuada para un agente con múltiples llamadas a herramientas por turno.
+
+**Alternativas descartadas:** OpenAI GPT-4o, Anthropic Claude. Técnicamente equivalentes para este caso de uso; la elección fue pragmática (acceso y créditos disponibles).
+
+---
+
+### 2.2 Orquestación del Agente - LangGraph
+
+**Decisión:** LangGraph con un grafo ReAct (agente → herramientas → agente) y `MemorySaver` para persistencia en memoria de la conversación.
+
+**Motivos:**
+
+- En la entrevista se me preguntó por LangGraph por lo que supongo que es relevante para el perfil buscado.
+- El modelo de grafo de estados permite añadir nodos de forma aislada (p. ej., el subgrafo de creación de cartas custom) sin tocar el flujo principal.
+- `MemorySaver` simplifica enormemente la gestión de historial de conversación en una demo sin necesidad de base de datos externa.
+
+**Diseño del agente principal:**
+
+```mermaid
+flowchart LR
+    S([START]) --> agent(agent_node)
+    agent -->|tool calls| tools(ToolNode)
+    tools --> agent
+    agent -->|no tool calls| E([END])
+```
+
+
+
+**Subgrafo para cartas custom:**
+
+```mermaid
+flowchart LR
+    S([START]) --> design(design_card)
+    design --> art(generate_art)
+    art --> render(render_and_save)
+    render --> E([END])
+```
+
+
+
+El agente principal llama a `create_custom_card` como una herramienta más; internamente esa herramienta ejecuta el subgrafo de tres pasos. Esto mantiene la lógica de creación encapsulada y testable de forma independiente.
+
+---
+
+### 2.3 Base de Datos Vectorial - ChromaDB
+
+**Decisión:** ChromaDB en modo local (persistido en disco) para el índice RAG del reglamento.
+
+**Motivos:**
+
+- Permite crear y usar la base de datos vectorial sin levantar ningún servicio externo, lo que simplifica enormemente la puesta en marcha de la demo.
+- Integración nativa con LangChain (`langchain-chroma`), sin código de adaptación adicional.
+- El reglamento es un documento estático (se actualiza periódicamente, no en tiempo real), por lo que una solución local es suficiente para este contexto.
+
+---
+
+### 2.4 Backend - FastAPI
+
+**Decisión:** FastAPI como framework de backend.
+
+**Motivos:**
+
+- Familiaridad con la tecnología.
+- Framework potente.
+- Generación automática de documentación OpenAPI, útil para que el equipo evaluador pueda explorar los endpoints.
+
+---
+
+### 2.5 Frontend - SPA Vanilla JS (módulo opcional)
+
+**Decisión:** Frontend como SPA en HTML/CSS/JS puro, servido por el propio FastAPI mediante `StaticFiles`. Su activación se controla con la variable de entorno `SERVE_FRONTEND`.
+
+**Motivos:**
+
+- El backend es el núcleo de la solución; el frontend es un accesorio para facilitar la demo sin necesidad de abrir Swagger.
+- Al ser un módulo opcional (configurable en un único punto), el backend funciona de forma completamente independiente: se puede desactivar el frontend y consumir la API desde cualquier cliente sin cambiar nada más.
+- Se descartó un framework de frontend (Next.js, React) porque habría desplazado el foco hacia el frontend cuando el valor del reto está en el backend y el agente.
+- El diseño permite, en una evolución futura, desacoplar completamente el frontend.
+
+---
+
+### 2.6 Generación de Imágenes - Google Imagen 4
+
+**Decisión:** Google Imagen 4 (`imagen-4.0-fast-generate-001`) para generar el arte de las cartas custom.
+
+**Motivos:**
+
+- Disponible en la misma cuenta de Google Cloud ya utilizada para Gemini, sin necesidad de gestionar credenciales adicionales.
+- La funcionalidad de cartas custom es un bonus; la elección del modelo de imagen no es crítica para el reto.
+
+---
+
+### 2.7 Observabilidad - LangSmith
+
+**Decisión:** LangSmith para trazabilidad de las ejecuciones del agente.
+
+**Motivos:**
+
+- Se integra de forma transparente con LangGraph: basta con configurar cuatro variables de entorno para obtener trazas completas de cada ejecución del grafo (nodos visitados, inputs/outputs de cada herramienta, latencias).
+- Es opcional y no intrusivo: se activa únicamente si `LANGSMITH_TRACING=true` y se ha proporcionado una API key. Si no se configura, el sistema funciona con normalidad.
+- Permite detectar en qué nodo falla el agente, qué herramientas llama y con qué argumentos, sin instrumentación manual.
+
+---
+
+### 2.8 Estrategia de Chunking del PDF
+
+> *Sección pendiente de completar. Se detallará la estrategia de segmentación del reglamento (tamaño de chunk, solapamiento, metadatos por regla) en una revisión futura.*
+
+---
+
+## 3. Arquitectura Productiva Propuesta
+
+La demo actual es un monolito útil para evaluar la solución, pero no es adecuada para producción. A continuación se describe una arquitectura productiva:
 
 ```mermaid
 flowchart TD
-    subgraph frontend [Canal de Entrada]
-        webchat[Web Chat Widget]
-        whatsapp[WhatsApp API - Twilio]
-        phone[Telefonía / IVR Voice]
+    CLIENT["Cliente\nBrowser / App / Call center"]
+
+    subgraph GW["API Gateway / Load Balancer"]
+        AUTH["Autenticación\nJWT · OAuth2 · API Keys"]
+        RLIMIT["Rate limiting · CORS · TLS"]
     end
 
-    subgraph gateway [Capa de Entrada / API Gateway]
-        apigw["FastAPI Gateway\n(Auth + Rate Limiting + CORS)"]
+    subgraph SERVICES["Servicios"]
+        BACKEND["Backend FastAPI\nCloud Run / ECS - Escalado horizontal"]
+        FRONTEND["Frontend estático\nCDN: S3 + CloudFront / Vercel"]
     end
 
-    subgraph agent_svc [Servicio de Agentes]
-        graph_svc["LangGraph Server / FastAPI\n(Lógica de Agente y Memoria)"]
-        redis_cache["Redis\n(Caché de consultas + Estados de Sesión)"]
+    subgraph DATA["Capa de datos"]
+        VECTORDB["Vector DB\nQdrant / Pinecone\nReglamento MTG indexado"]
+        DB["PostgreSQL\nHistorial de conversaciones\nSesiones de usuario"]
     end
 
-    subgraph rag_svc [Servicio de RAG]
-        vectorDB[("Vertex AI Vector Search\n/ Pinecone (Escalable)")]
-        embedSvc["Embedding Service\n(Google text-embedding-004)"]
+    subgraph OPS["Operaciones"]
+        INGESTA["Pipeline de ingesta\nActualización automática\ndel reglamento"]
+        OBS["Observabilidad\nLangSmith · Prometheus + Grafana\nLogging centralizado"]
+        SECRETS["Gestor de secretos\nGCP / AWS Secret Manager"]
     end
 
-    subgraph external [Fuentes de Datos]
-        mtgAPI["MTG API\nmagicthegathering.io"]
-        rulesDoc["Reglamento PDF\n(Pipeline de Ingesta S3/GCS)"]
-    end
-
-    subgraph monitoring [Monitoreo y Observabilidad]
-        langsmith["LangSmith\n(Trazas de LLM y debugging)"]
-        prometheus["Prometheus + Grafana\n(Métricas de infraestructura y latencias)"]
-    end
-
-    frontend --> gateway
-    gateway --> agent_svc
-    graph_svc --> redis_cache
-    graph_svc --> rag_svc
-    graph_svc --> mtgAPI
-    embedSvc --> rulesDoc
-    embedSvc --> vectorDB
-    graph_svc --> langsmith
-    gateway --> prometheus
+    CLIENT -->|HTTPS| GW
+    GW --> BACKEND
+    GW --> FRONTEND
+    BACKEND --> VECTORDB
+    BACKEND --> DB
+    INGESTA -->|indexa| VECTORDB
+    BACKEND --> OBS
+    BACKEND -.->|lee credenciales| SECRETS
 ```
 
-### Componentes de Producción Explicados:
-1. **API Gateway (FastAPI / Kong)**: Gestiona la autenticación de usuarios, enruta peticiones, y controla el número de peticiones por minuto (*rate-limiting*) para evitar costes excesivos en LLM.
-2. **LangGraph Graph Service**: Desplegado de forma independiente en contenedores (ej. Kubernetes o ECS). Utiliza Redis para almacenar el estado de la sesión de chat y provee endpoints de streaming para las respuestas del bot.
-3. **Redis**: Funciona como base de datos en memoria para almacenar las conversaciones de los usuarios de forma segura y veloz, además de cachear respuestas de la API de MTG y preguntas frecuentes del call center.
-4. **Vertex AI Vector Search / Pinecone**: Reemplaza al ChromaDB local de archivo por una base de datos de vectores en la nube gestionada, distribuida y con alta disponibilidad, optimizada para búsquedas rápidas con millones de vectores.
-5. **Observabilidad (LangSmith + Prometheus + Grafana)**:
-   - **LangSmith**: Esencial en producción para evaluar el comportamiento del agente, analizar qué herramientas está llamando y dónde se producen fallos de lógica.
-   - **Prometheus/Grafana**: Monitorea las métricas del sistema: latencia de la API, consumo de CPU/Memoria y porcentaje de errores HTTP.
+
+
+### Cambios principales respecto a la demo
+
+
+| Área               | Demo actual                                 | Producción                                                                     |
+| ------------------ | ------------------------------------------- | ------------------------------------------------------------------------------ |
+| Frontend           | Servido por FastAPI (`SERVE_FRONTEND=true`) | CDN o aplicación independiente                                                 |
+| Historial de conv. | `MemorySaver` (en memoria, volátil)         | PostgreSQL con `AsyncPostgresSaver` de LangGraph                               |
+| Vector DB          | ChromaDB local                              | Qdrant o Pinecone (servicio gestionado)                                        |
+| Autenticación      | Ninguna                                     | JWT / OAuth2 / API Keys por tenant                                             |
+| Escalado           | Un único proceso                            | Réplicas stateless detrás de load balancer                                     |
+| Ingesta del PDF    | Manual (script local)                       | Pipeline automático (CI/CD o webhook al publicar nueva versión del reglamento) |
+| Secretos           | `.env` local                                | Gestor de secretos (AWS Secrets Manager, GCP Secret Manager)                   |
+| Rate limiting      | Ninguno                                     | API Gateway con límites por usuario/tenant                                     |
+
+
