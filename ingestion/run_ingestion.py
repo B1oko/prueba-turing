@@ -3,35 +3,37 @@ import os
 import shutil
 import sys
 
+from dotenv import load_dotenv
+
 from ingestion.pdf_parser import parse_mtg_rules_pdf
 from ingestion.vectorstore import get_vectorstore
 from src.config.logging_config import setup_logging
-from src.config.settings import get_settings
 
+load_dotenv()
 setup_logging()
 logger = logging.getLogger(__name__)
 
 _PDF_PATH = os.path.join("data", "MagicCompRules 20260417.pdf")
 _BATCH_SIZE = 200
+_CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", "./.chroma_db")
+_CHROMA_COLLECTION_NAME = os.getenv("CHROMA_COLLECTION_NAME", "mtg_rules")
 
 
 def main():
-    settings = get_settings()
-
     if not os.path.exists(_PDF_PATH):
         logger.error(
             "Rules PDF not found at %s. Please place the PDF file there.", _PDF_PATH
         )
         sys.exit(1)
 
-    if os.path.exists(settings.CHROMA_DB_PATH):
+    if os.path.exists(_CHROMA_DB_PATH):
         try:
-            shutil.rmtree(settings.CHROMA_DB_PATH)
-            logger.info("Deleted old database directory: %s", settings.CHROMA_DB_PATH)
+            shutil.rmtree(_CHROMA_DB_PATH)
+            logger.info("Deleted old database directory: %s", _CHROMA_DB_PATH)
         except Exception as e:
             logger.warning(
                 "Could not delete %s: %s. Attempting to proceed.",
-                settings.CHROMA_DB_PATH,
+                _CHROMA_DB_PATH,
                 e,
             )
 
@@ -40,7 +42,9 @@ def main():
     logger.info("Successfully parsed %d rule documents.", len(documents))
 
     logger.info("Initializing vector store...")
-    vectorstore = get_vectorstore()
+    vectorstore = get_vectorstore(
+        db_path=_CHROMA_DB_PATH, collection_name=_CHROMA_COLLECTION_NAME
+    )
     total_docs = len(documents)
 
     logger.info(
