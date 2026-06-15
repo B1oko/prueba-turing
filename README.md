@@ -29,7 +29,7 @@ Crea un archivo `.env` en el directorio raíz:
 # Obligatorio
 GEMINI_API_KEY=tu_clave_de_gemini_aqui
 
-# Opcional — observabilidad con LangSmith
+# Opcional _ observabilidad con LangSmith
 LANGSMITH_TRACING=false
 LANGSMITH_API_KEY=
 LANGSMITH_PROJECT=prueba-turing
@@ -39,31 +39,36 @@ LANGSMITH_PROJECT=prueba-turing
 
 ## Instalación y uso
 
-### 1. Instalar dependencias
+### Opción A _ Local (manual)
 
-```bash
+```bash	
+# Instalar dependencias
 uv sync
-```
 
-### 2. Ejecutar la ingesta de reglas
-
-```bash
+# Ejecutar la ingesta de reglas
 uv run python -m ingestion.run_ingestion
-```
 
-### 3. Levantar la API
-
-```bash
+# Levantar la API
 uv run uvicorn src.main:app --host 127.0.0.1 --port 8000
 ```
 
 Abre `http://localhost:8000` en tu navegador.
 
-### 4. Ejecutar los tests
+---
+
+### Opción B _ Docker
+
+La ingesta del reglamento se ejecuta automáticamente durante el build, por lo que la imagen arranca lista para usar.
 
 ```bash
-uv run pytest tests/
+# Construir la imagen
+docker build -t mtg-chatbot .
+
+# Ejecutar el contenedor
+docker run -p 8000:8000 -e GEMINI_API_KEY=tu_clave_aqui mtg-chatbot
 ```
+
+Abre `http://localhost:8000` en tu navegador.
 
 ---
 

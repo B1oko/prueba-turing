@@ -81,19 +81,21 @@ class SearchCardsTool(BaseTool):
             if card.name in seen:
                 continue
             seen.add(card.name)
-            result.append(Card(
-                name=card.name,
-                mana_cost=card.manaCost or "",
-                type=card.type,
-                text=card.text or "",
-                image_url=card.imageUrl,
-                power=card.power,
-                toughness=card.toughness,
-                rarity=card.rarity,
-                flavor=card.flavor,
-                colors=[_NAME_TO_CODE.get(c, c) for c in (card.colors or [])],
-                set=card.set,
-            ).model_dump())
+            result.append(
+                Card(
+                    name=card.name,
+                    mana_cost=card.manaCost or "",
+                    type=card.type,
+                    text=card.text or "",
+                    image_url=card.imageUrl,
+                    power=card.power,
+                    toughness=card.toughness,
+                    rarity=card.rarity,
+                    flavor=card.flavor,
+                    colors=[_NAME_TO_CODE.get(c, c) for c in (card.colors or [])],
+                    set=card.set,
+                ).model_dump()
+            )
         return json.dumps({"cards": result})
 
     def _to_summary(self, cards: list[MTGCard]) -> str:
@@ -105,7 +107,7 @@ class SearchCardsTool(BaseTool):
             if card.manaCost:
                 parts.append(card.manaCost)
             if card.type:
-                parts.append(f"— {card.type}")
+                parts.append(f"_ {card.type}")
             if card.text:
                 snippet = card.text[:120] + ("..." if len(card.text) > 120 else "")
                 parts.append(f"| {snippet}")
@@ -114,7 +116,9 @@ class SearchCardsTool(BaseTool):
             lines.append(" ".join(parts))
         return f"Cards found ({len(cards)}):\n" + "\n".join(f"- {l}" for l in lines)
 
-    def _validate_filters(self, name, colors, types, subtypes, supertypes, cmc, text) -> Optional[str]:
+    def _validate_filters(
+        self, name, colors, types, subtypes, supertypes, cmc, text
+    ) -> Optional[str]:
         if not any([name, colors, types, subtypes, supertypes, cmc is not None, text]):
             return json.dumps(
                 {"error": "Please provide at least one filter for the card search."}
@@ -134,7 +138,9 @@ class SearchCardsTool(BaseTool):
         cmc: Optional[int] = None,
         text: Optional[str] = None,
     ) -> tuple[str, str]:
-        if err := self._validate_filters(name, colors, types, subtypes, supertypes, cmc, text):
+        if err := self._validate_filters(
+            name, colors, types, subtypes, supertypes, cmc, text
+        ):
             return err, json.dumps({"cards": []})
         try:
             cards = await self._client.search_cards(
@@ -147,6 +153,8 @@ class SearchCardsTool(BaseTool):
                 text=text,
             )
         except Exception as e:
-            logger.error("SearchCardsTool MTG API search failed: %s", str(e), exc_info=True)
+            logger.error(
+                "SearchCardsTool MTG API search failed: %s", str(e), exc_info=True
+            )
             return f"Error connecting to MTG API: {e}", json.dumps({"cards": []})
         return self._to_summary(cards), self._to_artifact(cards)

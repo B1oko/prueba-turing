@@ -8,12 +8,12 @@ No es un reto extenso, pero nos gusta dejar un margen de tiempo para que puedas 
 
 Sin más, a continuación tienes el reto:
 
-Reto Técnico — Data Scientist · AI Engineer
+Reto Técnico _ Data Scientist · AI Engineer
 Departamento: Delivery
 
 Nota sobre el uso de IA y herramientas de Asistencia En este reto se permite y se espera que uses asistentes de código (GitHub Copilot, Claude, ChatGPT, Cursor, etc.). Trabajamos con estas herramientas en el día a día y saber usarlas bien es parte del perfil que buscamos. Lo que evaluamos no es si escribiste cada línea a mano, sino si entiendes lo que has construido, por qué tomaste cada decisión y si eres capaz de defenderlo en la entrevista. Durante la revisión te haremos preguntas directas sobre el código y el diseño.
 
-## Apartado 1 — Implementación Técnica
+## Apartado 1 _ Implementación Técnica
 
 ## Contexto del reto
 
@@ -40,7 +40,7 @@ Una solución demo básica respondiendo a los requerimientos pedidos por el clie
 
 Alternativas: Si se prefiere hacer otro juego/hobby para tener un mayor conocimiento del caso de uso, está permitido. Se requiere que la solución contenga un gran documento de normativa (O varios documentos de menor tamaño) así como un acceso a una página web/API para obtener información actualizada. Si se decide ir con una alternativa, se pide que se comunique para validar que sería un caso de uso interesante
 
-## Apartado 2 — Revisión de Código
+## Apartado 2 _ Revisión de Código
 
 El siguiente código implementa el pipeline de ingesta y consulta de un compañero. Identifica todos los problemas que encuentres (bugs, seguridad, mantenibilidad, diseño, rendimiento) y propón una versión mejorada razonada.
 

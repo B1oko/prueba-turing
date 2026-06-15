@@ -95,7 +95,7 @@ No hay bloques `try/except` para llamadas a la red (OpenAI), lectura/escritura d
 
 - **Solución**: Envolver las operaciones críticas en bloques `try/except` y devolver un mensaje de error controlado al usuario.
 
-### 1.8 Resource Leak — Fichero sin Cerrar
+### 1.8 Resource Leak _ Fichero sin Cerrar
 
 `open("history.json", "w").write(...)` abre el fichero pero nunca lo cierra explícitamente; el cierre queda delegado al recolector de basura. Bajo alta carga o en caso de excepción, esto puede dejar descriptores de fichero abiertos.
 
